@@ -1,5 +1,8 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
+import { fileURLToPath } from "node:url";
+
+config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

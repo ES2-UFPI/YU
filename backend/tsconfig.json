@@ -6,9 +6,10 @@
     "noEmit": true,
     "rootDir": ".",
     "strict": true,
+    "types": ["node"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["prisma", "prisma.config.ts"]
+  "include": ["generated", "prisma", "prisma.config.ts", "src"]
 }
