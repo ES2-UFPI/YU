@@ -70,3 +70,51 @@ export async function saveGoals(
     res.status(500).json({ error: "Erro interno ao salvar objetivos." });
   }
 }
+
+export async function getGoals(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  const userId = req.userId!;
+
+  try {
+    const records = await prisma.userGoal.findMany({
+      where: { userId, active: true },
+      orderBy: { savedAt: "desc" },
+      include: {
+        wellnessGoal: {        
+          select: {
+            id: true,
+            name: true,
+            shortDescription: true,  
+            icon: true,
+          },
+        },
+      },
+    });
+
+    if (records.length === 0) {
+      res.status(200).json({
+        message: "Nenhum objetivo selecionado ainda.",
+        total: 0,
+        goals: [],
+      });
+      return;
+    }
+
+    res.status(200).json({
+      total: records.length,
+      goals: records.map((r) => ({
+        id: r.wellnessGoal.id,                   
+        name: r.wellnessGoal.name,             
+        description: r.wellnessGoal.shortDescription,  
+        icon: r.wellnessGoal.icon,              
+        active: r.active,
+        savedAt: r.savedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("[getGoals]", error);
+    res.status(500).json({ error: "Erro interno ao buscar objetivos." });
+  }
+}
