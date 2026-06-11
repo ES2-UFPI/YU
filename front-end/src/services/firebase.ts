@@ -2,9 +2,9 @@ import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCkHkGern67LdFNjS5Pz39c9UbNUqnHsf0",
-    authDomain: "yu-tutorial-pratico.firebaseapp.com",
-    projectId: "yu-tutorial-pratico",
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
 };
 
 const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
