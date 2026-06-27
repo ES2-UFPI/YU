@@ -6,7 +6,7 @@
     "noEmit": true,
     "rootDir": ".",
     "strict": true,
-    "types": ["node"],
+    "types": ["jest", "node"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
