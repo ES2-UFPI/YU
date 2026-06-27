@@ -1,6 +1,7 @@
 import express from "express";
 import admin from "firebase-admin";
 import goalsRoutes from "./routes/goals.routes.js";
+import screenTimeRoutes from "./routes/screenTime.routes.js";
  
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,4 +36,6 @@ app.use("/users/goals", goalsRoutes);
  
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+
+app.use("/users/screen-time", screenTimeRoutes);
 });
