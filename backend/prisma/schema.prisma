@@ -31,3 +31,13 @@ model UserGoal {
 
   @@unique([userId, goalId])
 }
+
+model UserLocation {
+  id         String   @id @default(uuid())
+  userId     String
+  latitude   Float
+  longitude  Float
+  capturedAt DateTime @default(now())
+
+  @@map("user_locations")
+}
