@@ -1,6 +1,7 @@
 import express from "express";
 import admin from "firebase-admin";
 import goalsRoutes from "./routes/goals.routes.js";
+import locationRoutes from "./routes/location.routes.js";
 import screenTimeRoutes from "./routes/screenTime.routes.js";
  
 const app = express();
@@ -33,6 +34,8 @@ app.get("/", (_req, res) => {
 });
  
 app.use("/users/goals", goalsRoutes);
+
+app.use("/users/location", locationRoutes);
  
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

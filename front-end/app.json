@@ -25,6 +25,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "O YU usa sua localização para personalizar as sugestões de bem-estar."
+        }
+      ]
+    ]
   }
 }
