@@ -1,23 +1,25 @@
-import { useState } from 'react';
-import {View,Text, TouchableOpacity,StyleSheet,Pressable} from 'react-native'
-import {SafeAreaView} from 'react-native-safe-area-context'
-import { AppRoutes } from './Routes';
 import { useEffect } from "react";
+import { AppRoutes } from "./Routes";
 import { getAnonymousIdToken } from "./services/firebase";
 import { collectAndSendLocation } from "./services/location.service";
+import { getWeather } from "./services/weather";
 
 export default function App() {
   useEffect(() => {
-    async function sendLocation() {
+    async function collectInitialContext() {
       try {
         const token = await getAnonymousIdToken();
-        await collectAndSendLocation(token);
+        const location = await collectAndSendLocation(token);
+
+        if (location) {
+          await getWeather(location.latitude, location.longitude, token);
+        }
       } catch (error) {
-        console.error("Erro ao enviar localizacao:", error);
+        console.error("Erro ao coletar contexto inicial:", error);
       }
     }
 
-    sendLocation();
+    collectInitialContext();
   }, []);
 
   return <AppRoutes />;

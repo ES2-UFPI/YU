@@ -6,8 +6,10 @@ export type LocationCache = {
 
 export type WeatherCache = {
     temperature: number;
-    condition: "sunny" | "cloudy" | "rain" | "unknown";
-    timestamp: string;
+    condition: string;
+    latitude: number;
+    longitude: number;
+    fetchedAt: string;
 };
 
 export type Suggestion = {
