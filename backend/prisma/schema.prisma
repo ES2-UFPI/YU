@@ -41,3 +41,15 @@ model UserLocation {
 
   @@map("user_locations")
 }
+
+model WeatherData {
+  id          String   @id @default(uuid())
+  userId      String
+  temperature Float
+  condition   String
+  latitude    Float
+  longitude   Float
+  fetchedAt   DateTime @default(now())
+
+  @@map("weather_data")
+}
