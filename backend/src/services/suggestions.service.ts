@@ -62,6 +62,7 @@ export async function generateSuggestions(
 
     return {
       source: "engine",
+      contextProfile: context,
       total: suggestions.length,
       suggestions: suggestions.slice(0, 5),
     };
@@ -70,6 +71,7 @@ export async function generateSuggestions(
 
     return {
       source: "cache",
+      contextProfile: context,
       total: suggestions.length,
       suggestions,
     };

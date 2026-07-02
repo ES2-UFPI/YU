@@ -2,6 +2,20 @@ import { Response } from "express";
 import { getSuggestions } from "../controllers/suggestions.controller.js";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware.js";
 
+jest.mock("../lib/prisma.js", () => ({
+  prisma: {
+    userGoal: {
+      findMany: jest.fn().mockResolvedValue([
+        { goalId: "screen_time_balance" },
+        { goalId: "read_more" },
+      ]),
+    },
+    userLocation: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
+  },
+}));
+
 function createResponse() {
   const res = {
     status: jest.fn().mockReturnThis(),
@@ -12,7 +26,21 @@ function createResponse() {
 }
 
 describe("getSuggestions", () => {
-  it("deve retornar 400 quando o contexto não for enviado", async () => {
+  it("deve retornar 401 quando não houver usuário autenticado", async () => {
+    const req = {
+      body: {},
+    } as AuthenticatedRequest;
+    const res = createResponse();
+
+    await getSuggestions(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({
+      error: "Usuário não autenticado.",
+    });
+  });
+
+  it("deve montar o perfil de contexto no ciclo de sugestão", async () => {
     const req = {
       userId: "user-123",
       body: {},
@@ -21,32 +49,31 @@ describe("getSuggestions", () => {
 
     await getSuggestions(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "O campo 'context' é obrigatório e deve ser um objeto.",
-    });
-  });
-
-  it("deve retornar 400 quando a localização não usar coordenadas numéricas", async () => {
-    const req = {
-      userId: "user-123",
-      body: {
-        context: {
-          location: {
-            latitude: "-3.7319",
-            longitude: -38.5267,
-          },
-        },
-      },
-    } as AuthenticatedRequest;
-    const res = createResponse();
-
-    await getSuggestions(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error:
-        "Os campos 'context.location.latitude' e 'context.location.longitude' devem ser números.",
-    });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextProfile: expect.objectContaining({
+          userId: "user-123",
+          goals: ["screen_time_balance", "read_more"],
+          location: expect.objectContaining({
+            granted: false,
+            latitude: null,
+            longitude: null,
+          }),
+          weather: expect.objectContaining({
+            available: false,
+            condition: "unknown",
+          }),
+          screenTime: expect.objectContaining({
+            source: "mock",
+            apps: expect.objectContaining({
+              instagramMinutes: expect.any(Number),
+              whatsappMinutes: expect.any(Number),
+              readingMinutes: expect.any(Number),
+            }),
+          }),
+        }),
+      })
+    );
   });
 });
