@@ -3,6 +3,7 @@ import admin from "firebase-admin";
 import goalsRoutes from "./routes/goals.routes.js";
 import locationRoutes from "./routes/location.routes.js";
 import screenTimeRoutes from "./routes/screenTime.routes.js";
+import suggestionsRoutes from "./routes/suggestions.routes.js";
  
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,10 +36,12 @@ app.get("/", (_req, res) => {
  
 app.use("/users/goals", goalsRoutes);
 
+app.use("/users/screen-time", screenTimeRoutes);
+
+app.use("/users/suggestions", suggestionsRoutes);
+
 app.use("/users/location", locationRoutes);
  
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
-
-app.use("/users/screen-time", screenTimeRoutes);
 });
