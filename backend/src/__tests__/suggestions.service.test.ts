@@ -3,18 +3,35 @@ import { UserContextProfile } from "../types/suggestions.types.js";
 
 describe("generateSuggestions", () => {
   const context: UserContextProfile = {
+    userId: "user-123",
+    generatedAt: "2026-07-02T00:00:00.000Z",
+    goals: ["screen_time_balance", "read_more"],
     location: {
+      granted: true,
       latitude: -3.7319,
       longitude: -38.5267,
+      capturedAt: "2026-07-02T00:00:00.000Z",
+    },
+    weather: {
+      available: false,
+      temperatureCelsius: null,
+      condition: "unknown",
+      observedAt: null,
     },
     screenTime: {
+      source: "mock",
       totalMinutes: 320,
+      apps: {
+        instagramMinutes: 120,
+        whatsappMinutes: 80,
+        readingMinutes: 30,
+      },
       byCategory: {
         social: 140,
         entertainment: 90,
       },
     },
-    goals: ["reduce_screen_time", "sleep_better"],
+    timeOfDay: "night",
   };
 
   it("deve retornar sugestões do cache enquanto o motor não estiver disponível", async () => {
