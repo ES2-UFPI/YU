@@ -14,34 +14,6 @@
     "offlineAvailable": true
   },
   {
-    "id": "stretch-neck-shoulders",
-    "title": "Alongue pescoço e ombros",
-    "shortDescription": "Alongue a região por alguns minutos para aliviar tensão.",
-    "category": "physical_activity",
-    "wellbeingCategory": "exercise",
-    "contextRequirements": {
-      "goals": ["physical_activity", "screen_time_balance"],
-      "weather": ["any"],
-      "location": ["indoor", "any"],
-      "screenTimeLevel": ["medium", "high"]
-    },
-    "offlineAvailable": true
-  },
-  {
-    "id": "stairs-break",
-    "title": "Use as escadas",
-    "shortDescription": "Suba alguns lances de escada em ritmo confortável.",
-    "category": "physical_activity",
-    "wellbeingCategory": "exercise",
-    "contextRequirements": {
-      "goals": ["physical_activity"],
-      "weather": ["any"],
-      "location": ["indoor", "any"],
-      "screenTimeLevel": ["low", "medium", "high"]
-    },
-    "offlineAvailable": true
-  },
-  {
     "id": "mobility-flow",
     "title": "Faça uma sequência de mobilidade",
     "shortDescription": "Movimente quadris, coluna e tornozelos com calma.",
@@ -224,20 +196,6 @@
     "offlineAvailable": true
   },
   {
-    "id": "study-note",
-    "title": "Anote uma pendência",
-    "shortDescription": "Registre algo importante para organizar seu estudo.",
-    "category": "focus",
-    "wellbeingCategory": "mental_health",
-    "contextRequirements": {
-      "goals": ["study"],
-      "weather": ["any"],
-      "location": ["indoor", "any"],
-      "screenTimeLevel": ["any"]
-    },
-    "offlineAvailable": true
-  },
-  {
     "id": "breathing-break",
     "title": "Respire por alguns instantes",
     "shortDescription": "Faça respirações lentas para retomar a atenção.",
@@ -275,34 +233,6 @@
       "goals": ["screen_time_balance", "study"],
       "weather": ["any"],
       "location": ["any"],
-      "screenTimeLevel": ["low", "medium", "high"]
-    },
-    "offlineAvailable": true
-  },
-  {
-    "id": "quiet-minute",
-    "title": "Fique um minuto em silêncio",
-    "shortDescription": "Pare por um minuto e observe como você está se sentindo.",
-    "category": "rest",
-    "wellbeingCategory": "mental_health",
-    "contextRequirements": {
-      "goals": ["screen_time_balance"],
-      "weather": ["any"],
-      "location": ["indoor", "outdoor", "any"],
-      "screenTimeLevel": ["any"]
-    },
-    "offlineAvailable": true
-  },
-  {
-    "id": "organize-small-task",
-    "title": "Organize uma tarefa pequena",
-    "shortDescription": "Escolha uma tarefa simples e defina o primeiro passo.",
-    "category": "focus",
-    "wellbeingCategory": "mental_health",
-    "contextRequirements": {
-      "goals": ["study"],
-      "weather": ["any"],
-      "location": ["indoor", "any"],
       "screenTimeLevel": ["low", "medium", "high"]
     },
     "offlineAvailable": true
@@ -418,5 +348,117 @@
       "screenTimeLevel": ["medium", "high", "any"]
     },
     "offlineAvailable": true
+  },
+  {
+    "id": "outdoor-walk-sunny",
+    "title": "Aproveite o sol para caminhar",
+    "shortDescription": "O tempo está bom. Dê uma volta curta ao ar livre.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["sunny"],
+      "location": ["outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "indoor-exercise-rain",
+    "title": "Está chovendo — exercite-se dentro de casa",
+    "shortDescription": "A chuva é o momento ideal para uma série rápida de exercícios sem sair.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["rain"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "hot-weather-hydration",
+    "title": "Está calor — hidrate-se agora",
+    "shortDescription": "A temperatura está alta. Beba água antes de sentir sede.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["hydration"],
+      "weather": ["sunny"],
+      "location": ["any"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "cloudy-outdoor-activity",
+    "title": "Tempo nublado é ótimo para sair",
+    "shortDescription": "Sem sol forte, o clima está ideal para uma caminhada tranquila.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["cloudy"],
+      "location": ["outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "high-screen-time-walk",
+    "title": "Você usou muito o celular hoje",
+    "shortDescription": "Você já passou bastante tempo em telas. Que tal uma pausa ativa?",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["sunny", "cloudy", "any"],
+      "location": ["any"],
+      "screenTimeLevel": ["high"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "social-media-overuse-stretch",
+    "title": "Pausa das redes sociais",
+    "shortDescription": "Você passou mais de 2h em redes sociais hoje. Levante e se mexa um pouco.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["high"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "rainy-reading",
+    "title": "Dia de chuva é dia de leitura",
+    "shortDescription": "Aproveite o clima fechado para ler algumas páginas.",
+    "category": "focus",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["read_more", "screen_time_balance"],
+      "weather": ["rain"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "morning-sun-vitamin-d",
+    "title": "Sol da manhã — tome vitamina D natural",
+    "shortDescription": "Passe alguns minutos ao ar livre aproveitando o sol da manhã.",
+    "category": "wellbeing",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity", "hydration"],
+      "weather": ["sunny"],
+      "location": ["outdoor"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": false
   }
 ]
