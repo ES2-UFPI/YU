@@ -1,6 +1,24 @@
 import { Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware.js";
+
+function getTodayDateString(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
  
 export async function saveGoals(
   req: AuthenticatedRequest,
@@ -116,5 +134,82 @@ export async function getGoals(
   } catch (error) {
     console.error("[getGoals]", error);
     res.status(500).json({ error: "Erro interno ao buscar objetivos." });
+  }
+}
+
+export async function completeGoal(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  const userId = req.userId!;
+  const goalIdParam = req.params.goalId;
+  const goalId = Array.isArray(goalIdParam) ? goalIdParam[0] : goalIdParam;
+  const completedAt = getTodayDateString();
+
+  if (!goalId) {
+    res.status(400).json({ error: "Parametro 'goalId' e obrigatorio." });
+    return;
+  }
+
+  try {
+    const selectedGoal = await prisma.userGoal.findFirst({
+      where: {
+        userId,
+        goalId,
+        active: true,
+      },
+      select: { id: true },
+    });
+
+    if (!selectedGoal) {
+      res.status(404).json({
+        error: "Objetivo nao pertence aos objetivos selecionados pelo usuario.",
+      });
+      return;
+    }
+
+    const existingCompletion = await prisma.goalProgress.findUnique({
+      where: {
+        userId_goalId_completedAt: {
+          userId,
+          goalId,
+          completedAt,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existingCompletion) {
+      res.status(409).json({
+        error: "Objetivo ja foi concluido hoje.",
+        completedAt,
+      });
+      return;
+    }
+
+    await prisma.goalProgress.create({
+      data: {
+        userId,
+        goalId,
+        completedAt,
+      },
+    });
+
+    res.status(201).json({
+      message: "Objetivo concluido com sucesso.",
+      goalId,
+      completedAt,
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      res.status(409).json({
+        error: "Objetivo ja foi concluido hoje.",
+        completedAt,
+      });
+      return;
+    }
+
+    console.error("[completeGoal]", error);
+    res.status(500).json({ error: "Erro interno ao concluir objetivo." });
   }
 }
