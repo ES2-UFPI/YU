@@ -2,13 +2,25 @@ import { Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware.js";
 
-function getTodayDateString(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+const GOAL_ALREADY_COMPLETED_TODAY_ERROR =
+  "Objetivo ja foi concluido hoje.";
+
+function formatDateOnly(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function getTodayDateString(): string {
+  return formatDateOnly(new Date());
+}
+
+function getSingleParam(
+  value: string | string[] | undefined
+): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -18,6 +30,16 @@ function isUniqueConstraintError(error: unknown): boolean {
     "code" in error &&
     (error as { code?: string }).code === "P2002"
   );
+}
+
+function sendAlreadyCompletedTodayResponse(
+  res: Response,
+  completedAt: string
+): void {
+  res.status(409).json({
+    error: GOAL_ALREADY_COMPLETED_TODAY_ERROR,
+    completedAt,
+  });
 }
  
 export async function saveGoals(
@@ -142,8 +164,7 @@ export async function completeGoal(
   res: Response
 ): Promise<void> {
   const userId = req.userId!;
-  const goalIdParam = req.params.goalId;
-  const goalId = Array.isArray(goalIdParam) ? goalIdParam[0] : goalIdParam;
+  const goalId = getSingleParam(req.params.goalId);
   const completedAt = getTodayDateString();
 
   if (!goalId) {
@@ -180,10 +201,7 @@ export async function completeGoal(
     });
 
     if (existingCompletion) {
-      res.status(409).json({
-        error: "Objetivo ja foi concluido hoje.",
-        completedAt,
-      });
+      sendAlreadyCompletedTodayResponse(res, completedAt);
       return;
     }
 
@@ -202,10 +220,7 @@ export async function completeGoal(
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      res.status(409).json({
-        error: "Objetivo ja foi concluido hoje.",
-        completedAt,
-      });
+      sendAlreadyCompletedTodayResponse(res, completedAt);
       return;
     }
 
