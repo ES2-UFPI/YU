@@ -54,3 +54,14 @@ model GoalProgress {
   @@unique([userId, goalId, completedAt])
   @@map("goal_progress")
 }
+model WeatherData {
+  id          String   @id @default(uuid())
+  userId      String
+  temperature Float
+  condition   String
+  latitude    Float
+  longitude   Float
+  fetchedAt   DateTime @default(now())
+
+  @@map("weather_data")
+}
