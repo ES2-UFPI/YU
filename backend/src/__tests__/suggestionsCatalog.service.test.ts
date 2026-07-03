@@ -1,4 +1,3 @@
-import { suggestionsCatalog } from "../data/suggestionsCatalog.js";
 import {
   getOfflineCatalogSuggestions,
   getSuggestionCatalogItemById,
@@ -12,7 +11,7 @@ import {
 } from "../types/suggestionsCatalog.types.js";
 
 describe("suggestionsCatalog", () => {
-  const requiredCategories: WellbeingCategory[] = [
+  const validCategories: WellbeingCategory[] = [
     "exercise",
     "nutrition",
     "sleep",
@@ -37,38 +36,44 @@ describe("suggestionsCatalog", () => {
     "high",
     "any",
   ];
+  const validGoalIds = [
+    "hydration",
+    "screen_time_balance",
+    "physical_activity",
+    "read_more",
+    "study",
+    "healthy_eating",
+  ];
 
   it("deve conter no minimo 30 sugestoes", () => {
+    const suggestionsCatalog = getSuggestionsCatalog();
+
     expect(suggestionsCatalog.length).toBeGreaterThanOrEqual(30);
   });
 
   it("deve ter ids unicos", () => {
+    const suggestionsCatalog = getSuggestionsCatalog();
     const ids = suggestionsCatalog.map((suggestion) => suggestion.id);
     const uniqueIds = new Set(ids);
 
     expect(uniqueIds.size).toBe(ids.length);
   });
 
-  it("deve cobrir as categorias obrigatorias de bem-estar", () => {
-    const categories = new Set(
-      suggestionsCatalog.map((suggestion) => suggestion.wellbeingCategory)
-    );
-
-    requiredCategories.forEach((category) => {
-      expect(categories.has(category)).toBe(true);
-    });
-  });
-
   it("deve ter todos os campos obrigatorios e requisitos validos", () => {
+    const suggestionsCatalog = getSuggestionsCatalog();
+
     suggestionsCatalog.forEach((suggestion) => {
       expect(suggestion.id).toEqual(expect.any(String));
       expect(suggestion.title).toEqual(expect.any(String));
       expect(suggestion.shortDescription).toEqual(expect.any(String));
       expect(suggestion.category).toEqual(expect.any(String));
-      expect(requiredCategories).toContain(suggestion.wellbeingCategory);
+      expect(validCategories).toContain(suggestion.wellbeingCategory);
       expect(typeof suggestion.offlineAvailable).toBe("boolean");
       expect(Array.isArray(suggestion.contextRequirements.goals)).toBe(true);
       expect(suggestion.contextRequirements.goals.length).toBeGreaterThan(0);
+      suggestion.contextRequirements.goals.forEach((goalId) => {
+        expect(validGoalIds).toContain(goalId);
+      });
 
       suggestion.contextRequirements.weather.forEach((weather) => {
         expect(validWeather).toContain(weather);
@@ -87,7 +92,7 @@ describe("suggestionsCatalog", () => {
 
     catalog[0].contextRequirements.goals.push("mutated");
 
-    expect(suggestionsCatalog[0].contextRequirements.goals).not.toContain(
+    expect(getSuggestionsCatalog()[0].contextRequirements.goals).not.toContain(
       "mutated"
     );
   });

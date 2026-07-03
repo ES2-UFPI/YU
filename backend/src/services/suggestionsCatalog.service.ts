@@ -1,6 +1,17 @@
-import { suggestionsCatalog } from "../data/suggestionsCatalog.js";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { SuggestionCatalogItem } from "../types/suggestionsCatalog.types.js";
 import { Suggestion } from "../types/suggestions.types.js";
+
+const catalogPath = resolve(process.cwd(), "data", "suggestionsCatalog.json");
+
+function loadSuggestionsCatalog(): SuggestionCatalogItem[] {
+  const rawCatalog = readFileSync(catalogPath, "utf8");
+
+  return JSON.parse(rawCatalog) as SuggestionCatalogItem[];
+}
+
+const suggestionsCatalog = loadSuggestionsCatalog();
 
 function cloneCatalogItem(item: SuggestionCatalogItem): SuggestionCatalogItem {
   return {
