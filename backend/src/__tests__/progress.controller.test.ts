@@ -38,6 +38,10 @@ function createRequest(userId = "user-123") {
   } as AuthenticatedRequest;
 }
 
+function createUnauthenticatedRequest() {
+  return {} as AuthenticatedRequest;
+}
+
 describe("getProgress", () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -117,7 +121,7 @@ describe("getProgress", () => {
   });
 
   it("deve retornar 401 quando nao houver usuario autenticado", async () => {
-    const req = createRequest(undefined);
+    const req = createUnauthenticatedRequest();
     const res = createResponse();
 
     await getProgress(req, res);
