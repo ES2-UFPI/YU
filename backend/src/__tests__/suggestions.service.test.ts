@@ -34,10 +34,10 @@ describe("generateSuggestions", () => {
     timeOfDay: "night",
   };
 
-  it("deve retornar sugestões do cache enquanto o motor não estiver disponível", async () => {
+  it("deve retornar sugestões geradas pelo motor de decisão", async () => {
     const response = await generateSuggestions("user-123", context);
 
-    expect(response.source).toBe("cache");
+    expect(response.source).toBe("engine");
   });
 
   it("deve retornar entre 3 e 5 sugestões", async () => {

@@ -25,10 +25,6 @@ function cloneCatalogItem(item: SuggestionCatalogItem): SuggestionCatalogItem {
   };
 }
 
-export function getSuggestionsCatalog(): SuggestionCatalogItem[] {
-  return suggestionsCatalog.map(cloneCatalogItem);
-}
-
 export function getSuggestionCatalogItemById(
   id: string
 ): SuggestionCatalogItem | null {
@@ -47,4 +43,8 @@ export function getOfflineCatalogSuggestions(limit = 3): Suggestion[] {
       description: suggestion.shortDescription,
       category: suggestion.category,
     }));
+}
+
+export function getSuggestionsCatalog(): SuggestionCatalogItem[] {
+  return suggestionsCatalog.map(cloneCatalogItem);
 }
