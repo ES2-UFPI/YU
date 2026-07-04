@@ -7,9 +7,10 @@ import {
   rankByScreenTime,
   selectSuggestions,
 } from "../engine/suggestionEngine.js";
-import { CatalogSuggestion, UserContext } from "../engine/engineTypes.js";
+import { SuggestionCatalogItem } from "../types/suggestionsCatalog.types.js";
+import { UserContext } from "../engine/engineTypes.js";
 
-const mockCatalog: CatalogSuggestion[] = [
+const mockCatalog: SuggestionCatalogItem[] = [
   {
     id: "walk-sunny",
     title: "Caminhe ao sol",
