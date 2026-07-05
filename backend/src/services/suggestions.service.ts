@@ -9,6 +9,7 @@ import { SuggestionCatalogItem } from "../types/suggestionsCatalog.types.js";
 import {
   getOfflineCatalogSuggestions,
   getSuggestionsCatalog,
+  resolveCatalogSuggestionGoalId,
 } from "./suggestionsCatalog.service.js";
 
 async function getSuggestionsFromDecisionEngine(
@@ -47,14 +48,15 @@ async function getSuggestionsFromDecisionEngine(
 
   return engineResult.map((suggestion) => ({
     id: suggestion.id,
+    goalId: resolveCatalogSuggestionGoalId(suggestion, context.goals),
     title: suggestion.title,
     description: suggestion.shortDescription,
     category: suggestion.category,
   }));
 }
 
-function getCachedSuggestions(): Suggestion[] {
-  return getOfflineCatalogSuggestions(3);
+function getCachedSuggestions(context: UserContextProfile): Suggestion[] {
+  return getOfflineCatalogSuggestions(3, context.goals);
 }
 
 function normalizeWeather(condition: string): string {
@@ -93,7 +95,7 @@ export async function generateSuggestions(
       suggestions: suggestions.slice(0, 5),
     };
   } catch {
-    const suggestions = getCachedSuggestions();
+    const suggestions = getCachedSuggestions(context);
 
     return {
       source: "cache",

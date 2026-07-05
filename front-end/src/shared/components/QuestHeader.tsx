@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, useWindowDimensions, Image, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 
 type QuestHeaderProps = {
     title?: string;
@@ -8,6 +8,7 @@ type QuestHeaderProps = {
     current?: number;
     total?: number;
     completed?: boolean;
+    progressBar?: ReactNode;
 };
 
 export const QuestHeader = ({
@@ -16,6 +17,7 @@ export const QuestHeader = ({
     current = 0,
     total = 10,
     completed = false,
+    progressBar,
 }: QuestHeaderProps) => {
     const { height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
@@ -44,23 +46,25 @@ export const QuestHeader = ({
                 </Text>
 
                 <View style={styles.progressRow}>
-                    <View style={styles.barTrack}>
-                        <Animated.View
-                            style={[
-                                styles.barFill,
-                                {
-                                    width: progressAnim.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: ["0%", "100%"],
-                                    }),
-                                },
-                            ]}
-                        >
-                            <Text style={[styles.progressLabel, completed && styles.progressLabelDone]}>
-                                {current} / {total}
-                            </Text>
-                        </Animated.View>
-                    </View>
+                    {progressBar ?? (
+                        <View style={styles.barTrack}>
+                            <Animated.View
+                                style={[
+                                    styles.barFill,
+                                    {
+                                        width: progressAnim.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: ["0%", "100%"],
+                                        }),
+                                    },
+                                ]}
+                            >
+                                <Text style={[styles.progressLabel, completed && styles.progressLabelDone]}>
+                                    {current} / {total}
+                                </Text>
+                            </Animated.View>
+                        </View>
+                    )}
                 </View>
             </View>
 

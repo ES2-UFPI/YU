@@ -6,6 +6,7 @@ import {
 
 export interface Suggestion {
   id: string;
+  goalId?: string;
   title: string;
   description: string;
   category: string;

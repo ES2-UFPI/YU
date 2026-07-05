@@ -14,6 +14,7 @@ export type WeatherCache = {
 
 export type Suggestion = {
     id: string;
+    goalId?: string;
     title: string;
     description: string;
     category: string;

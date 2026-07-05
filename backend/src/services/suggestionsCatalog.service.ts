@@ -33,12 +33,29 @@ export function getSuggestionCatalogItemById(
   return item ? cloneCatalogItem(item) : null;
 }
 
-export function getOfflineCatalogSuggestions(limit = 3): Suggestion[] {
+export function resolveCatalogSuggestionGoalId(
+  suggestion: SuggestionCatalogItem,
+  userGoals: string[] = []
+): string {
+  return (
+    suggestion.contextRequirements.goals.find((goalId) =>
+      userGoals.includes(goalId)
+    ) ??
+    userGoals[0] ??
+    suggestion.contextRequirements.goals[0]
+  );
+}
+
+export function getOfflineCatalogSuggestions(
+  limit = 3,
+  userGoals: string[] = []
+): Suggestion[] {
   return suggestionsCatalog
     .filter((suggestion) => suggestion.offlineAvailable)
     .slice(0, limit)
     .map((suggestion) => ({
       id: suggestion.id,
+      goalId: resolveCatalogSuggestionGoalId(suggestion, userGoals),
       title: suggestion.title,
       description: suggestion.shortDescription,
       category: suggestion.category,

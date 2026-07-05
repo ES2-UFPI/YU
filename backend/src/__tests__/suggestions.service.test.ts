@@ -53,6 +53,7 @@ describe("generateSuggestions", () => {
 
     response.suggestions.forEach((suggestion) => {
       expect(suggestion).toHaveProperty("id");
+      expect(suggestion).toHaveProperty("goalId");
       expect(suggestion).toHaveProperty("title");
       expect(suggestion).toHaveProperty("description");
       expect(suggestion).toHaveProperty("category");
