@@ -79,8 +79,8 @@ describe("getProgress", () => {
       where: {
         userId: "user-123",
         completedAt: {
-          gte: "2026-07-04",
-          lte: "2026-07-10",
+          gte: new Date(2026, 6, 4),
+          lte: new Date(2026, 6, 10),
         },
       },
       select: {

@@ -80,7 +80,7 @@ describe("completeGoal", () => {
         userId_goalId_completedAt: {
           userId: "user-123",
           goalId: "read_more",
-          completedAt: "2026-07-03",
+          completedAt: new Date(2026, 6, 3),
         },
       },
       select: { id: true },
@@ -89,7 +89,7 @@ describe("completeGoal", () => {
       data: {
         userId: "user-123",
         goalId: "read_more",
-        completedAt: "2026-07-03",
+        completedAt: new Date(2026, 6, 3),
       },
     });
     expect(res.status).toHaveBeenCalledWith(201);

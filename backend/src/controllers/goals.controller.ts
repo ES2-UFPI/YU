@@ -17,6 +17,12 @@ function getTodayDateString(): string {
   return formatDateOnly(new Date());
 }
 
+function getTodayDateOnly(): Date {
+  const today = new Date();
+
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+}
+
 function getSingleParam(
   value: string | string[] | undefined
 ): string | undefined {
@@ -166,6 +172,7 @@ export async function completeGoal(
   const userId = req.userId!;
   const goalId = getSingleParam(req.params.goalId);
   const completedAt = getTodayDateString();
+  const completedAtDate = getTodayDateOnly();
 
   if (!goalId) {
     res.status(400).json({ error: "Parametro 'goalId' e obrigatorio." });
@@ -194,7 +201,7 @@ export async function completeGoal(
         userId_goalId_completedAt: {
           userId,
           goalId,
-          completedAt,
+          completedAt: completedAtDate,
         },
       },
       select: { id: true },
@@ -209,7 +216,7 @@ export async function completeGoal(
       data: {
         userId,
         goalId,
-        completedAt,
+        completedAt: completedAtDate,
       },
     });
 

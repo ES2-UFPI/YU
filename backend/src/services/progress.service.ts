@@ -36,6 +36,10 @@ function addDays(date: Date, days: number): Date {
   return nextDate;
 }
 
+function toDateOnly(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 function toDateKey(value: Date | string): string {
   return typeof value === "string" ? value.slice(0, 10) : formatDateOnly(value);
 }
@@ -109,14 +113,14 @@ export async function getUserProgress(
     return EMPTY_PROGRESS;
   }
 
-  const todayKey = formatDateOnly(today);
-  const weekStartKey = formatDateOnly(addDays(today, -6));
+  const todayDate = toDateOnly(today);
+  const weekStartDate = toDateOnly(addDays(today, -6));
   const progressRecords = await prisma.goalProgress.findMany({
     where: {
       userId,
       completedAt: {
-        gte: weekStartKey,
-        lte: todayKey,
+        gte: weekStartDate,
+        lte: todayDate,
       },
     },
     select: {
