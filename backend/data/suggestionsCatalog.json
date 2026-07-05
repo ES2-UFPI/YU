@@ -1,0 +1,464 @@
+[
+  {
+    "id": "walk-10-minutes",
+    "title": "Caminhe por 10 minutos",
+    "shortDescription": "Faça uma caminhada leve para ativar o corpo.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["sunny", "cloudy", "unknown"],
+      "location": ["outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "mobility-flow",
+    "title": "Faça uma sequência de mobilidade",
+    "shortDescription": "Movimente quadris, coluna e tornozelos com calma.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["rain", "cloudy", "unknown", "any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "sunlight-pause",
+    "title": "Pegue alguns minutos de sol",
+    "shortDescription": "Vá a um local aberto e receba luz natural por pouco tempo.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["sunny"],
+      "location": ["outdoor"],
+      "screenTimeLevel": ["low", "medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "desk-squats",
+    "title": "Faça agachamentos leves",
+    "shortDescription": "Complete uma pequena série de agachamentos sem pressa.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "drink-water",
+    "title": "Beba água",
+    "shortDescription": "Faça uma pausa breve para se hidratar.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["hydration", "healthy_eating"],
+      "weather": ["sunny", "cloudy", "unknown", "any"],
+      "location": ["any"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "prepare-fruit",
+    "title": "Coma uma fruta",
+    "shortDescription": "Escolha uma fruta simples para um lanche rápido.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["healthy_eating"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["low", "medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "plan-next-meal",
+    "title": "Planeje a próxima refeição",
+    "shortDescription": "Pense em uma refeição equilibrada antes da fome apertar.",
+    "category": "focus",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["healthy_eating"],
+      "weather": ["any"],
+      "location": ["any"],
+      "screenTimeLevel": ["low", "medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "reduce-sugary-drink",
+    "title": "Troque bebida doce por água",
+    "shortDescription": "Escolha água ou uma bebida sem açúcar nesta pausa.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["hydration", "healthy_eating"],
+      "weather": ["sunny", "cloudy", "unknown", "any"],
+      "location": ["any"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "mindful-snack",
+    "title": "Faça um lanche com atenção",
+    "shortDescription": "Coma devagar e perceba sinais de fome e saciedade.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["healthy_eating"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "fill-water-bottle",
+    "title": "Encha sua garrafa",
+    "shortDescription": "Deixe água por perto para facilitar a hidratação.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["hydration"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "sleep-wind-down",
+    "title": "Comece a desacelerar",
+    "shortDescription": "Reduza estímulos e prepare o ambiente para descansar.",
+    "category": "rest",
+    "wellbeingCategory": "sleep",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "dim-lights",
+    "title": "Diminua as luzes",
+    "shortDescription": "Use menos luz forte para criar um ambiente mais calmo.",
+    "category": "rest",
+    "wellbeingCategory": "sleep",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "no-phone-bed",
+    "title": "Afaste o celular da cama",
+    "shortDescription": "Deixe o aparelho longe para reduzir checagens repetidas.",
+    "category": "digital_balance",
+    "wellbeingCategory": "sleep",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "short-rest",
+    "title": "Faça uma pausa curta",
+    "shortDescription": "Descanse por poucos minutos antes de voltar às tarefas.",
+    "category": "rest",
+    "wellbeingCategory": "sleep",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["rain", "cloudy", "unknown", "any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["low", "medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "breathing-break",
+    "title": "Respire por alguns instantes",
+    "shortDescription": "Faça respirações lentas para retomar a atenção.",
+    "category": "rest",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["screen_time_balance", "study"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "box-breathing",
+    "title": "Faça respiração em caixa",
+    "shortDescription": "Inspire, segure e expire em contagens curtas e iguais.",
+    "category": "rest",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["screen_time_balance", "study"],
+      "weather": ["any"],
+      "location": ["indoor", "outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "gratitude-note",
+    "title": "Anote algo bom",
+    "shortDescription": "Escreva uma coisa positiva que aconteceu hoje.",
+    "category": "wellbeing",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["screen_time_balance", "study"],
+      "weather": ["any"],
+      "location": ["any"],
+      "screenTimeLevel": ["low", "medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "rain-sound-pause",
+    "title": "Aproveite uma pausa calma",
+    "shortDescription": "Se estiver chovendo, use o momento para uma pausa tranquila.",
+    "category": "rest",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["rain"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "read-two-pages",
+    "title": "Leia duas páginas",
+    "shortDescription": "Leia um trecho curto sem pressa e sem notificações.",
+    "category": "focus",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["read_more", "study"],
+      "weather": ["any"],
+      "location": ["indoor", "outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "screen-break-5",
+    "title": "Faça uma pausa de tela",
+    "shortDescription": "Afaste-se do celular por cinco minutos.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["any"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "disable-notifications",
+    "title": "Silencie notificações",
+    "shortDescription": "Desative alertas por um período curto de foco.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance", "study"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "instagram-limit",
+    "title": "Defina limite para redes sociais",
+    "shortDescription": "Escolha um horário para parar de usar redes hoje.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["any"],
+      "screenTimeLevel": ["high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "offline-activity",
+    "title": "Troque tela por atividade offline",
+    "shortDescription": "Escolha uma ação simples fora do celular agora.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["sunny", "cloudy", "unknown", "any"],
+      "location": ["indoor", "outdoor", "any"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "whatsapp-check-window",
+    "title": "Agrupe respostas no WhatsApp",
+    "shortDescription": "Responda mensagens em um bloco e depois feche o app.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance", "study"],
+      "weather": ["any"],
+      "location": ["any"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "phone-away-meal",
+    "title": "Coma longe do celular",
+    "shortDescription": "Deixe o aparelho de lado durante a próxima refeição.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance", "healthy_eating"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": true
+  },
+  {
+    "id": "outdoor-walk-sunny",
+    "title": "Aproveite o sol para caminhar",
+    "shortDescription": "O tempo está bom. Dê uma volta curta ao ar livre.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["sunny"],
+      "location": ["outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "indoor-exercise-rain",
+    "title": "Está chovendo — exercite-se dentro de casa",
+    "shortDescription": "A chuva é o momento ideal para uma série rápida de exercícios sem sair.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["rain"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "hot-weather-hydration",
+    "title": "Está calor — hidrate-se agora",
+    "shortDescription": "A temperatura está alta. Beba água antes de sentir sede.",
+    "category": "wellbeing",
+    "wellbeingCategory": "nutrition",
+    "contextRequirements": {
+      "goals": ["hydration"],
+      "weather": ["sunny"],
+      "location": ["any"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "cloudy-outdoor-activity",
+    "title": "Tempo nublado é ótimo para sair",
+    "shortDescription": "Sem sol forte, o clima está ideal para uma caminhada tranquila.",
+    "category": "physical_activity",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity"],
+      "weather": ["cloudy"],
+      "location": ["outdoor", "any"],
+      "screenTimeLevel": ["medium", "high", "any"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "high-screen-time-walk",
+    "title": "Você usou muito o celular hoje",
+    "shortDescription": "Você já passou bastante tempo em telas. Que tal uma pausa ativa?",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["sunny", "cloudy", "any"],
+      "location": ["any"],
+      "screenTimeLevel": ["high"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "social-media-overuse-stretch",
+    "title": "Pausa das redes sociais",
+    "shortDescription": "Você passou mais de 2h em redes sociais hoje. Levante e se mexa um pouco.",
+    "category": "digital_balance",
+    "wellbeingCategory": "digital_rest",
+    "contextRequirements": {
+      "goals": ["screen_time_balance"],
+      "weather": ["any"],
+      "location": ["indoor", "any"],
+      "screenTimeLevel": ["high"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "rainy-reading",
+    "title": "Dia de chuva é dia de leitura",
+    "shortDescription": "Aproveite o clima fechado para ler algumas páginas.",
+    "category": "focus",
+    "wellbeingCategory": "mental_health",
+    "contextRequirements": {
+      "goals": ["read_more", "screen_time_balance"],
+      "weather": ["rain"],
+      "location": ["indoor"],
+      "screenTimeLevel": ["medium", "high"]
+    },
+    "offlineAvailable": false
+  },
+  {
+    "id": "morning-sun-vitamin-d",
+    "title": "Sol da manhã — tome vitamina D natural",
+    "shortDescription": "Passe alguns minutos ao ar livre aproveitando o sol da manhã.",
+    "category": "wellbeing",
+    "wellbeingCategory": "exercise",
+    "contextRequirements": {
+      "goals": ["physical_activity", "hydration"],
+      "weather": ["sunny"],
+      "location": ["outdoor"],
+      "screenTimeLevel": ["any"]
+    },
+    "offlineAvailable": false
+  }
+]

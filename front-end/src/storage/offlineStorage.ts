@@ -3,6 +3,7 @@ import type {
     LocationCache,
     ScreenTimeDay,
     Suggestion,
+    UserContextProfile,
     WeatherCache,
 } from "./offlineTypes";
 
@@ -13,6 +14,7 @@ const STORAGE_KEYS = {
     suggestionsCatalog: "@yu:offline:suggestions_catalog",
     lastSuggestions: "@yu:offline:last_suggestions",
     screenTimeHistory: "@yu:offline:screen_time_history",
+    contextProfile: "@yu:offline:context_profile",
 } as const;
 
 const SCREEN_TIME_HISTORY_LIMIT = 7;
@@ -103,4 +105,20 @@ export async function getScreenTimeHistory(): Promise<ScreenTimeDay[]> {
     return limitScreenTimeHistory(history);
 }
 
-export type { LocationCache, ScreenTimeDay, Suggestion, WeatherCache };
+export async function saveContextProfileCache(
+    profile: UserContextProfile
+): Promise<void> {
+    await saveJson(STORAGE_KEYS.contextProfile, profile);
+}
+
+export async function getContextProfileCache(): Promise<UserContextProfile | null> {
+    return getJson<UserContextProfile | null>(STORAGE_KEYS.contextProfile, null);
+}
+
+export type {
+    LocationCache,
+    ScreenTimeDay,
+    Suggestion,
+    UserContextProfile,
+    WeatherCache,
+};
