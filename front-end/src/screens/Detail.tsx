@@ -8,9 +8,11 @@ import {
 import { useEffect, useState } from "react";
 import { GoalCheckCard } from "../shared/components/GoalCheckCard";
 import { QuestHeader } from "../shared/components/QuestHeader";
+import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import { fetchSuggestions, Suggestion } from "../services/suggestionsApi";
+import { completeGoal } from "../services/goalsApi";
 
 const GOAL_CARD_SIZE = 80;
 
@@ -18,7 +20,7 @@ export const DetailPage = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [source, setSource] = useState<"engine" | "cache" | "offline" | null>(null);
   const [loading, setLoading] = useState(true);
-  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [progressRefreshKey, setProgressRefreshKey] = useState(0);
 
   useEffect(() => {
     async function loadSuggestions() {
@@ -42,15 +44,6 @@ export const DetailPage = () => {
 
     loadSuggestions();
   }, []);
-
-  // Marca uma sugestão como concluída e atualiza o progresso
-  function handleComplete(id: string) {
-    setCompleted((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  }
 
   if (loading) {
     return (
@@ -84,8 +77,12 @@ export const DetailPage = () => {
             ? "Você está offline. Exibindo sugestões do cache."
             : "Complete missões e deixe o Yu Feliz! As missões renovam todo dia."
         }
-        current={completed.size}        
-        total={suggestions.length}
+        progressBar={
+          <DailyProgressBar
+            refreshKey={progressRefreshKey}
+            variant="header"
+          />
+        }
       />
 
       {/* ScrollView */}
@@ -101,7 +98,12 @@ export const DetailPage = () => {
             iconColor="#59519e"
             cardSize={GOAL_CARD_SIZE}
             onCompleteBackend={async () => {
-              handleComplete(suggestion.id);
+              if (!suggestion.goalId) {
+                throw new Error("Sugestao sem objetivo associado.");
+              }
+
+              await completeGoal(suggestion.goalId);
+              setProgressRefreshKey((current) => current + 1);
               console.log("Sugestão concluída:", suggestion.id);
             }}
           />

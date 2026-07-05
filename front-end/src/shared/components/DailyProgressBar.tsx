@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
+import {
+  LayoutChangeEvent,
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -14,7 +21,10 @@ import {
 type DailyProgressBarProps = {
   completedToday?: number;
   totalGoals?: number;
+  animationDuration?: number;
+  refreshKey?: number;
   style?: StyleProp<ViewStyle>;
+  variant?: "default" | "header";
 };
 
 const EMPTY_PROGRESS: ProgressIndicators = {
@@ -44,7 +54,10 @@ function getProgressColor(percentage: number): string {
 export function DailyProgressBar({
   completedToday,
   totalGoals,
+  animationDuration = 650,
+  refreshKey = 0,
   style,
+  variant = "default",
 }: DailyProgressBarProps) {
   const [progress, setProgress] =
     useState<ProgressIndicators>(EMPTY_PROGRESS);
@@ -52,6 +65,7 @@ export function DailyProgressBar({
     completedToday === undefined || totalGoals === undefined
   );
   const [error, setError] = useState<string | null>(null);
+  const [trackWidth, setTrackWidth] = useState(0);
   const shouldFetch = completedToday === undefined || totalGoals === undefined;
   const resolvedCompleted = completedToday ?? progress.completedToday;
   const resolvedTotal = totalGoals ?? progress.totalGoals;
@@ -61,7 +75,8 @@ export function DailyProgressBar({
   const percentage =
     safeTotal === 0 ? 0 : clamp((safeCompleted / safeTotal) * 100, 0, 100);
   const fillColor = getProgressColor(percentage);
-  const animatedPercentage = useSharedValue(0);
+  const animatedProgress = useSharedValue(0);
+  const isHeaderVariant = variant === "header";
 
   useEffect(() => {
     if (!shouldFetch) {
@@ -101,20 +116,48 @@ export function DailyProgressBar({
     return () => {
       active = false;
     };
-  }, [shouldFetch]);
+  }, [refreshKey, shouldFetch]);
 
   useEffect(() => {
-    animatedPercentage.value = withTiming(percentage, {
-      duration: 650,
+    if (animationDuration === 0) {
+      animatedProgress.value = percentage / 100;
+      return;
+    }
+
+    animatedProgress.value = withTiming(percentage / 100, {
+      duration: animationDuration,
       easing: Easing.out(Easing.cubic),
     });
-  }, [animatedPercentage, percentage]);
+  }, [animatedProgress, animationDuration, percentage]);
 
   const animatedFillStyle = useAnimatedStyle(() => ({
-    width: `${animatedPercentage.value}%`,
+    width: trackWidth * animatedProgress.value,
   }));
 
+  function handleTrackLayout(event: LayoutChangeEvent) {
+    setTrackWidth(event.nativeEvent.layout.width);
+  }
+
+  function renderHeaderStatus(message: string, isError = false) {
+    return (
+      <View style={[styles.headerContainer, style]}>
+        <View style={styles.headerTrack}>
+          <Text
+            numberOfLines={1}
+            style={[styles.headerLabel, isError && styles.headerErrorLabel]}
+          >
+            {message}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   if (loading) {
+    if (isHeaderVariant) {
+      return renderHeaderStatus("Carregando progresso...");
+    }
+
     return (
       <View style={[styles.container, style]}>
         <Text style={styles.statusText}>Carregando progresso...</Text>
@@ -123,9 +166,44 @@ export function DailyProgressBar({
   }
 
   if (error) {
+    if (isHeaderVariant) {
+      return renderHeaderStatus(error, true);
+    }
+
     return (
       <View style={[styles.container, style]}>
         <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (isHeaderVariant) {
+    return (
+      <View style={[styles.headerContainer, style]}>
+        <View
+          accessibilityRole="progressbar"
+          accessibilityValue={{
+            min: 0,
+            max: safeTotal,
+            now: safeCompleted,
+            text: `${safeCompleted} de ${safeTotal} objetivos cumpridos hoje`,
+          }}
+          onLayout={handleTrackLayout}
+          style={styles.headerTrack}
+        >
+          <Animated.View
+            style={[
+              styles.headerFill,
+              {
+                backgroundColor: fillColor,
+              },
+              animatedFillStyle,
+            ]}
+          />
+          <Text adjustsFontSizeToFit numberOfLines={1} style={styles.headerLabel}>
+            {safeCompleted} de {safeTotal} objetivos cumpridos hoje
+          </Text>
+        </View>
       </View>
     );
   }
@@ -149,6 +227,7 @@ export function DailyProgressBar({
           now: safeCompleted,
           text: `${safeCompleted} de ${safeTotal} objetivos cumpridos hoje`,
         }}
+        onLayout={handleTrackLayout}
         style={styles.track}
       >
         <Animated.View
@@ -180,6 +259,39 @@ const styles = StyleSheet.create({
     color: "#8A2A19",
     fontSize: 13,
     lineHeight: 18,
+  },
+  headerContainer: {
+    width: "100%",
+  },
+  headerTrack: {
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 999,
+    height: 28,
+    justifyContent: "center",
+    overflow: "hidden",
+    width: "100%",
+  },
+  headerFill: {
+    bottom: 0,
+    borderRadius: 999,
+    height: "100%",
+    left: 0,
+    position: "absolute",
+    top: 0,
+  },
+  headerLabel: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+    paddingHorizontal: 10,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.28)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  headerErrorLabel: {
+    color: "#FFE4E0",
   },
   textRow: {
     flexDirection: "row",
