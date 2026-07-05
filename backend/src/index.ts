@@ -5,6 +5,7 @@ import locationRoutes from "./routes/location.routes.js";
 import screenTimeRoutes from "./routes/screenTime.routes.js";
 import suggestionsRoutes from "./routes/suggestions.routes.js";
 import weatherRoutes from "./routes/weather.routes.js";
+import progressRoutes from "./routes/progress.routes.js";
  
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,8 @@ app.use("/users/suggestions", suggestionsRoutes);
 app.use("/users/location", locationRoutes);
 
 app.use("/users/weather", weatherRoutes);
+
+app.use("/users/progress", progressRoutes);
  
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
