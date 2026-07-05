@@ -13,7 +13,14 @@ const MainTabs = () => {
     return (
         <Tab.Navigator>
             <Tab.Screen name="home" component={HomePage} />
-            <Tab.Screen name="detail" component={DetailPage} />
+            <Tab.Screen
+                name="detail"
+                component={DetailPage}
+                options={{
+                    headerShown: false,
+                    tabBarLabel: "Objetivos",
+                }}
+            />
         </Tab.Navigator>
     );
 };
