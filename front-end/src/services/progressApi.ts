@@ -2,8 +2,8 @@ import { apiFetch } from "./api";
 import { getAnonymousIdToken } from "./firebase";
 
 export type ProgressIndicators = {
-  completedToday: number;
-  totalGoals: number;
+  completedSuggestionsToday: number;
+  dailySuggestionTarget: number;
   completionRateToday: number;
   weeklyRate: number;
   currentStreak: number;
@@ -15,8 +15,8 @@ type ProgressResponse = Partial<ProgressIndicators> & {
 };
 
 const EMPTY_PROGRESS: ProgressIndicators = {
-  completedToday: 0,
-  totalGoals: 0,
+  completedSuggestionsToday: 0,
+  dailySuggestionTarget: 0,
   completionRateToday: 0,
   weeklyRate: 0,
   currentStreak: 0,

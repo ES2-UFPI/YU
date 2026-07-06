@@ -1,21 +1,23 @@
 import { prisma } from "../lib/prisma.js";
+import { buildUserContextProfile } from "./contextProfile.service.js";
+import { generateSuggestions } from "./suggestions.service.js";
 
-type GoalProgressRecord = {
-  goalId: string;
+type SuggestionProgressRecord = {
+  suggestionId: string;
   completedAt: Date | string;
 };
 
 export type ProgressIndicators = {
-  completedToday: number;
-  totalGoals: number;
+  completedSuggestionsToday: number;
+  dailySuggestionTarget: number;
   completionRateToday: number;
   weeklyRate: number;
   currentStreak: number;
 };
 
 const EMPTY_PROGRESS: ProgressIndicators = {
-  completedToday: 0,
-  totalGoals: 0,
+  completedSuggestionsToday: 0,
+  dailySuggestionTarget: 0,
   completionRateToday: 0,
   weeklyRate: 0,
   currentStreak: 0,
@@ -36,6 +38,10 @@ function addDays(date: Date, days: number): Date {
   return nextDate;
 }
 
+function toDateOnly(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 function toDateKey(value: Date | string): string {
   return typeof value === "string" ? value.slice(0, 10) : formatDateOnly(value);
 }
@@ -45,7 +51,7 @@ function roundRate(value: number): number {
 }
 
 function countCompletionsByDate(
-  records: GoalProgressRecord[]
+  records: SuggestionProgressRecord[]
 ): Map<string, number> {
   return records.reduce((counts, record) => {
     const dateKey = toDateKey(record.completedAt);
@@ -73,23 +79,25 @@ function calculateCurrentStreak(
 }
 
 function calculateProgressIndicators(
-  totalGoals: number,
-  records: GoalProgressRecord[],
+  dailySuggestionTarget: number,
+  records: SuggestionProgressRecord[],
   today: Date
 ): ProgressIndicators {
-  if (totalGoals === 0) {
+  if (dailySuggestionTarget === 0) {
     return EMPTY_PROGRESS;
   }
 
   const todayKey = formatDateOnly(today);
   const completionsByDate = countCompletionsByDate(records);
-  const completedToday = completionsByDate.get(todayKey) ?? 0;
+  const completedSuggestionsToday = completionsByDate.get(todayKey) ?? 0;
 
   return {
-    completedToday,
-    totalGoals,
-    completionRateToday: roundRate((completedToday / totalGoals) * 100),
-    weeklyRate: roundRate((records.length / (totalGoals * 7)) * 100),
+    completedSuggestionsToday,
+    dailySuggestionTarget,
+    completionRateToday: roundRate(
+      (completedSuggestionsToday / dailySuggestionTarget) * 100
+    ),
+    weeklyRate: roundRate((records.length / (dailySuggestionTarget * 7)) * 100),
     currentStreak: calculateCurrentStreak(completionsByDate, today),
   };
 }
@@ -98,29 +106,33 @@ export async function getUserProgress(
   userId: string,
   today = new Date()
 ): Promise<ProgressIndicators> {
-  const totalGoals = await prisma.userGoal.count({
-    where: {
-      userId,
-      active: true,
-    },
-  });
+  const contextProfile = await buildUserContextProfile(userId, today);
+  const suggestionsResponse = await generateSuggestions(userId, contextProfile);
+  const suggestionIds = suggestionsResponse.suggestions.map(
+    (suggestion) => suggestion.id
+  );
+  const dailySuggestionTarget = suggestionIds.length;
 
-  if (totalGoals === 0) {
+  if (dailySuggestionTarget === 0) {
     return EMPTY_PROGRESS;
   }
 
-  const todayKey = formatDateOnly(today);
-  const weekStartKey = formatDateOnly(addDays(today, -6));
-  const progressRecords = await prisma.goalProgress.findMany({
+  const todayDate = toDateOnly(today);
+  const tomorrowDate = addDays(todayDate, 1);
+  const weekStartDate = toDateOnly(addDays(today, -6));
+  const progressRecords = await prisma.suggestionProgress.findMany({
     where: {
       userId,
+      suggestionId: {
+        in: suggestionIds,
+      },
       completedAt: {
-        gte: weekStartKey,
-        lte: todayKey,
+        gte: weekStartDate,
+        lt: tomorrowDate,
       },
     },
     select: {
-      goalId: true,
+      suggestionId: true,
       completedAt: true,
     },
     orderBy: {
@@ -128,5 +140,9 @@ export async function getUserProgress(
     },
   });
 
-  return calculateProgressIndicators(totalGoals, progressRecords, today);
+  return calculateProgressIndicators(
+    dailySuggestionTarget,
+    progressRecords,
+    today
+  );
 }

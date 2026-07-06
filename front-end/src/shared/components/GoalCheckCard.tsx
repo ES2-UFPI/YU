@@ -53,8 +53,15 @@ export const GoalCheckCard = ({
             progressAnimation.current.start();
 
             holdTimer.current = setTimeout(async () => {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                setStatus("done");
+                try {
+                    await onCompleteBackend?.();
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    setStatus("done");
+                } catch (e) {
+                    console.error("Erro ao salvar conclusão:", e);
+                    setStatus("idle");
+                    progressAnim.setValue(0);
+                }
 
                 Animated.spring(scaleAnim, {
                     toValue: 1,
@@ -62,12 +69,6 @@ export const GoalCheckCard = ({
                     speed: 30,
                     bounciness: 6,
                 }).start();
-
-                try {
-                    await onCompleteBackend?.();
-                } catch (e) {
-                    console.error("Erro ao salvar conclusão:", e);
-                }
             }, HOLD_DURATION);
 
         }, 100);

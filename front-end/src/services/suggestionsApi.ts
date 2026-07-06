@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+import { getAnonymousIdToken } from "./firebase";
 import {
   saveLastSuggestionsCache,
   getLastSuggestionsCache,
@@ -17,6 +18,11 @@ export interface SuggestionsResult {
   total: number;
   suggestions: Suggestion[];
 }
+
+type CompleteSuggestionResponse = {
+  error?: string;
+  erro?: string;
+};
 
 export async function fetchSuggestions(
   token: string
@@ -62,4 +68,26 @@ export async function fetchSuggestions(
       suggestions: [],
     };
   }
+}
+
+export async function completeSuggestion(suggestionId: string): Promise<boolean> {
+  const token = await getAnonymousIdToken();
+  const response = await apiFetch(
+    `/users/suggestions/${encodeURIComponent(suggestionId)}/complete`,
+    token,
+    {
+      method: "POST",
+    }
+  );
+  const data = (await response.json().catch(() => ({}))) as CompleteSuggestionResponse;
+
+  if (response.status === 409) {
+    return false;
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || data.erro || "Nao foi possivel concluir a sugestao.");
+  }
+
+  return true;
 }

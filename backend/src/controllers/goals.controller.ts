@@ -1,46 +1,6 @@
 import { Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware.js";
-
-const GOAL_ALREADY_COMPLETED_TODAY_ERROR =
-  "Objetivo ja foi concluido hoje.";
-
-function formatDateOnly(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function getTodayDateString(): string {
-  return formatDateOnly(new Date());
-}
-
-function getSingleParam(
-  value: string | string[] | undefined
-): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function isUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: string }).code === "P2002"
-  );
-}
-
-function sendAlreadyCompletedTodayResponse(
-  res: Response,
-  completedAt: string
-): void {
-  res.status(409).json({
-    error: GOAL_ALREADY_COMPLETED_TODAY_ERROR,
-    completedAt,
-  });
-}
  
 export async function saveGoals(
   req: AuthenticatedRequest,
@@ -156,75 +116,5 @@ export async function getGoals(
   } catch (error) {
     console.error("[getGoals]", error);
     res.status(500).json({ error: "Erro interno ao buscar objetivos." });
-  }
-}
-
-export async function completeGoal(
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> {
-  const userId = req.userId!;
-  const goalId = getSingleParam(req.params.goalId);
-  const completedAt = getTodayDateString();
-
-  if (!goalId) {
-    res.status(400).json({ error: "Parametro 'goalId' e obrigatorio." });
-    return;
-  }
-
-  try {
-    const selectedGoal = await prisma.userGoal.findFirst({
-      where: {
-        userId,
-        goalId,
-        active: true,
-      },
-      select: { id: true },
-    });
-
-    if (!selectedGoal) {
-      res.status(404).json({
-        error: "Objetivo nao pertence aos objetivos selecionados pelo usuario.",
-      });
-      return;
-    }
-
-    const existingCompletion = await prisma.goalProgress.findUnique({
-      where: {
-        userId_goalId_completedAt: {
-          userId,
-          goalId,
-          completedAt,
-        },
-      },
-      select: { id: true },
-    });
-
-    if (existingCompletion) {
-      sendAlreadyCompletedTodayResponse(res, completedAt);
-      return;
-    }
-
-    await prisma.goalProgress.create({
-      data: {
-        userId,
-        goalId,
-        completedAt,
-      },
-    });
-
-    res.status(201).json({
-      message: "Objetivo concluido com sucesso.",
-      goalId,
-      completedAt,
-    });
-  } catch (error) {
-    if (isUniqueConstraintError(error)) {
-      sendAlreadyCompletedTodayResponse(res, completedAt);
-      return;
-    }
-
-    console.error("[completeGoal]", error);
-    res.status(500).json({ error: "Erro interno ao concluir objetivo." });
   }
 }

@@ -15,8 +15,7 @@ model WellnessGoal {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  userGoal     UserGoal[]
-  goalProgress GoalProgress[]
+  userGoal UserGoal[]
 
   @@map("wellness_goals")
 }
@@ -43,17 +42,16 @@ model UserLocation {
   @@map("user_locations")
 }
 
-model GoalProgress {
-  id          String   @id @default(uuid())
-  userId      String
-  goalId      String
-  completedAt DateTime @default(now()) @db.Date
+model SuggestionProgress {
+  id           String   @id @default(uuid())
+  userId       String
+  suggestionId String
+  completedAt  DateTime @default(now()) @db.Date
 
-  wellnessGoal WellnessGoal @relation(fields: [goalId], references: [id])
-
-  @@unique([userId, goalId, completedAt])
-  @@map("goal_progress")
+  @@unique([userId, suggestionId, completedAt])
+  @@map("suggestion_progress")
 }
+
 model WeatherData {
   id          String   @id @default(uuid())
   userId      String
