@@ -1,7 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 
-type GoalProgressRecord = {
-  goalId: string;
+type SuggestionProgressRecord = {
+  suggestionId: string;
   completedAt: Date | string;
 };
 
@@ -49,7 +49,7 @@ function roundRate(value: number): number {
 }
 
 function countCompletionsByDate(
-  records: GoalProgressRecord[]
+  records: SuggestionProgressRecord[]
 ): Map<string, number> {
   return records.reduce((counts, record) => {
     const dateKey = toDateKey(record.completedAt);
@@ -78,7 +78,7 @@ function calculateCurrentStreak(
 
 function calculateProgressIndicators(
   totalGoals: number,
-  records: GoalProgressRecord[],
+  records: SuggestionProgressRecord[],
   today: Date
 ): ProgressIndicators {
   if (totalGoals === 0) {
@@ -115,7 +115,7 @@ export async function getUserProgress(
 
   const todayDate = toDateOnly(today);
   const weekStartDate = toDateOnly(addDays(today, -6));
-  const progressRecords = await prisma.goalProgress.findMany({
+  const progressRecords = await prisma.suggestionProgress.findMany({
     where: {
       userId,
       completedAt: {
@@ -124,7 +124,7 @@ export async function getUserProgress(
       },
     },
     select: {
-      goalId: true,
+      suggestionId: true,
       completedAt: true,
     },
     orderBy: {

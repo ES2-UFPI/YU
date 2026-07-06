@@ -14,11 +14,6 @@ type GoalsResponse = {
     erro?: string;
 };
 
-type CompleteGoalResponse = {
-    error?: string;
-    erro?: string;
-};
-
 const API_BASE_URL = (
     process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
@@ -56,27 +51,4 @@ export async function saveSelectedGoals(goalIds: string[]): Promise<void> {
         method: "POST",
         body: JSON.stringify({ goalIds }),
     });
-}
-
-export async function completeGoal(goalId: string): Promise<void> {
-    const token = await getAnonymousIdToken();
-    const response = await fetch(
-        `${API_BASE_URL}/users/goals/${encodeURIComponent(goalId)}/complete`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
-    const data = (await response.json().catch(() => ({}))) as CompleteGoalResponse;
-
-    if (response.status === 409) {
-        return;
-    }
-
-    if (!response.ok) {
-        throw new Error(data.error || data.erro || "Nao foi possivel concluir o objetivo.");
-    }
 }

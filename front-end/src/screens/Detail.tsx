@@ -11,8 +11,11 @@ import { QuestHeader } from "../shared/components/QuestHeader";
 import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
-import { fetchSuggestions, Suggestion } from "../services/suggestionsApi";
-import { completeGoal } from "../services/goalsApi";
+import {
+  completeSuggestion,
+  fetchSuggestions,
+  Suggestion,
+} from "../services/suggestionsApi";
 
 const GOAL_CARD_SIZE = 80;
 
@@ -98,11 +101,7 @@ export const DetailPage = () => {
             iconColor="#59519e"
             cardSize={GOAL_CARD_SIZE}
             onCompleteBackend={async () => {
-              if (!suggestion.goalId) {
-                throw new Error("Sugestao sem objetivo associado.");
-              }
-
-              await completeGoal(suggestion.goalId);
+              await completeSuggestion(suggestion.id);
               setProgressRefreshKey((current) => current + 1);
               console.log("Sugestão concluída:", suggestion.id);
             }}

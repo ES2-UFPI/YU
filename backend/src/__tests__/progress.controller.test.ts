@@ -8,7 +8,7 @@ jest.mock("../lib/prisma.js", () => ({
     userGoal: {
       count: jest.fn(),
     },
-    goalProgress: {
+    suggestionProgress: {
       findMany: jest.fn(),
     },
   },
@@ -18,7 +18,7 @@ const prismaMock = prisma as unknown as {
   userGoal: {
     count: jest.Mock;
   };
-  goalProgress: {
+  suggestionProgress: {
     findMany: jest.Mock;
   };
 };
@@ -55,13 +55,13 @@ describe("getProgress", () => {
 
   it("deve retornar os indicadores de progresso do usuario autenticado", async () => {
     prismaMock.userGoal.count.mockResolvedValue(4);
-    prismaMock.goalProgress.findMany.mockResolvedValue([
-      { goalId: "hydration", completedAt: new Date(2026, 6, 10) },
-      { goalId: "read_more", completedAt: new Date(2026, 6, 10) },
-      { goalId: "study", completedAt: new Date(2026, 6, 9) },
-      { goalId: "hydration", completedAt: new Date(2026, 6, 8) },
-      { goalId: "screen_time_balance", completedAt: new Date(2026, 6, 8) },
-      { goalId: "physical_activity", completedAt: new Date(2026, 6, 6) },
+    prismaMock.suggestionProgress.findMany.mockResolvedValue([
+      { suggestionId: "drink-water", completedAt: new Date(2026, 6, 10) },
+      { suggestionId: "read-pages", completedAt: new Date(2026, 6, 10) },
+      { suggestionId: "study-focus", completedAt: new Date(2026, 6, 9) },
+      { suggestionId: "hydrate-break", completedAt: new Date(2026, 6, 8) },
+      { suggestionId: "screen-break", completedAt: new Date(2026, 6, 8) },
+      { suggestionId: "short-walk", completedAt: new Date(2026, 6, 6) },
     ]);
 
     const req = createRequest();
@@ -75,7 +75,7 @@ describe("getProgress", () => {
         active: true,
       },
     });
-    expect(prismaMock.goalProgress.findMany).toHaveBeenCalledWith({
+    expect(prismaMock.suggestionProgress.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-123",
         completedAt: {
@@ -84,7 +84,7 @@ describe("getProgress", () => {
         },
       },
       select: {
-        goalId: true,
+        suggestionId: true,
         completedAt: true,
       },
       orderBy: {
@@ -109,7 +109,7 @@ describe("getProgress", () => {
 
     await getProgress(req, res);
 
-    expect(prismaMock.goalProgress.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.suggestionProgress.findMany).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       completedToday: 0,
@@ -131,6 +131,6 @@ describe("getProgress", () => {
       error: "Usuario nao autenticado.",
     });
     expect(prismaMock.userGoal.count).not.toHaveBeenCalled();
-    expect(prismaMock.goalProgress.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.suggestionProgress.findMany).not.toHaveBeenCalled();
   });
 });
