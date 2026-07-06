@@ -19,8 +19,9 @@ import {
 } from "../../services/progressApi";
 
 type DailyProgressBarProps = {
-  completedToday?: number;
-  totalGoals?: number;
+  completedSuggestionsToday?: number;
+  completedSuggestionsDelta?: number;
+  dailySuggestionTarget?: number;
   animationDuration?: number;
   refreshKey?: number;
   style?: StyleProp<ViewStyle>;
@@ -28,8 +29,8 @@ type DailyProgressBarProps = {
 };
 
 const EMPTY_PROGRESS: ProgressIndicators = {
-  completedToday: 0,
-  totalGoals: 0,
+  completedSuggestionsToday: 0,
+  dailySuggestionTarget: 0,
   completionRateToday: 0,
   weeklyRate: 0,
   currentStreak: 0,
@@ -52,8 +53,9 @@ function getProgressColor(percentage: number): string {
 }
 
 export function DailyProgressBar({
-  completedToday,
-  totalGoals,
+  completedSuggestionsToday,
+  completedSuggestionsDelta = 0,
+  dailySuggestionTarget,
   animationDuration = 650,
   refreshKey = 0,
   style,
@@ -62,13 +64,18 @@ export function DailyProgressBar({
   const [progress, setProgress] =
     useState<ProgressIndicators>(EMPTY_PROGRESS);
   const [loading, setLoading] = useState(
-    completedToday === undefined || totalGoals === undefined
+    completedSuggestionsToday === undefined ||
+      dailySuggestionTarget === undefined
   );
   const [error, setError] = useState<string | null>(null);
   const [trackWidth, setTrackWidth] = useState(0);
-  const shouldFetch = completedToday === undefined || totalGoals === undefined;
-  const resolvedCompleted = completedToday ?? progress.completedToday;
-  const resolvedTotal = totalGoals ?? progress.totalGoals;
+  const shouldFetch =
+    completedSuggestionsToday === undefined ||
+    dailySuggestionTarget === undefined;
+  const resolvedCompleted =
+    (completedSuggestionsToday ?? progress.completedSuggestionsToday) +
+    completedSuggestionsDelta;
+  const resolvedTotal = dailySuggestionTarget ?? progress.dailySuggestionTarget;
   const safeTotal = Math.max(resolvedTotal, 0);
   const safeCompleted =
     safeTotal === 0 ? 0 : clamp(resolvedCompleted, 0, safeTotal);
@@ -186,7 +193,7 @@ export function DailyProgressBar({
             min: 0,
             max: safeTotal,
             now: safeCompleted,
-            text: `${safeCompleted} de ${safeTotal} objetivos cumpridos hoje`,
+            text: `${safeCompleted} de ${safeTotal} missões concluídas hoje`,
           }}
           onLayout={handleTrackLayout}
           style={styles.headerTrack}
@@ -201,7 +208,7 @@ export function DailyProgressBar({
             ]}
           />
           <Text adjustsFontSizeToFit numberOfLines={1} style={styles.headerLabel}>
-            {safeCompleted} de {safeTotal} objetivos cumpridos hoje
+            {safeCompleted}/{safeTotal} missões hoje
           </Text>
         </View>
       </View>
@@ -212,7 +219,7 @@ export function DailyProgressBar({
     <View style={[styles.container, style]}>
       <View style={styles.textRow}>
         <Text style={styles.label}>
-          {safeCompleted} de {safeTotal} objetivos cumpridos hoje
+          {safeCompleted}/{safeTotal} missões hoje
         </Text>
         <Text style={[styles.percentage, { color: fillColor }]}>
           {Math.round(percentage)}%
@@ -225,7 +232,7 @@ export function DailyProgressBar({
           min: 0,
           max: safeTotal,
           now: safeCompleted,
-          text: `${safeCompleted} de ${safeTotal} objetivos cumpridos hoje`,
+          text: `${safeCompleted} de ${safeTotal} missões concluídas hoje`,
         }}
         onLayout={handleTrackLayout}
         style={styles.track}

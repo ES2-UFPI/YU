@@ -1,4 +1,6 @@
 import { prisma } from "../lib/prisma.js";
+import { buildUserContextProfile } from "./contextProfile.service.js";
+import { generateSuggestions } from "./suggestions.service.js";
 
 type SuggestionProgressRecord = {
   suggestionId: string;
@@ -6,16 +8,16 @@ type SuggestionProgressRecord = {
 };
 
 export type ProgressIndicators = {
-  completedToday: number;
-  totalGoals: number;
+  completedSuggestionsToday: number;
+  dailySuggestionTarget: number;
   completionRateToday: number;
   weeklyRate: number;
   currentStreak: number;
 };
 
 const EMPTY_PROGRESS: ProgressIndicators = {
-  completedToday: 0,
-  totalGoals: 0,
+  completedSuggestionsToday: 0,
+  dailySuggestionTarget: 0,
   completionRateToday: 0,
   weeklyRate: 0,
   currentStreak: 0,
@@ -77,23 +79,25 @@ function calculateCurrentStreak(
 }
 
 function calculateProgressIndicators(
-  totalGoals: number,
+  dailySuggestionTarget: number,
   records: SuggestionProgressRecord[],
   today: Date
 ): ProgressIndicators {
-  if (totalGoals === 0) {
+  if (dailySuggestionTarget === 0) {
     return EMPTY_PROGRESS;
   }
 
   const todayKey = formatDateOnly(today);
   const completionsByDate = countCompletionsByDate(records);
-  const completedToday = completionsByDate.get(todayKey) ?? 0;
+  const completedSuggestionsToday = completionsByDate.get(todayKey) ?? 0;
 
   return {
-    completedToday,
-    totalGoals,
-    completionRateToday: roundRate((completedToday / totalGoals) * 100),
-    weeklyRate: roundRate((records.length / (totalGoals * 7)) * 100),
+    completedSuggestionsToday,
+    dailySuggestionTarget,
+    completionRateToday: roundRate(
+      (completedSuggestionsToday / dailySuggestionTarget) * 100
+    ),
+    weeklyRate: roundRate((records.length / (dailySuggestionTarget * 7)) * 100),
     currentStreak: calculateCurrentStreak(completionsByDate, today),
   };
 }
@@ -102,25 +106,29 @@ export async function getUserProgress(
   userId: string,
   today = new Date()
 ): Promise<ProgressIndicators> {
-  const totalGoals = await prisma.userGoal.count({
-    where: {
-      userId,
-      active: true,
-    },
-  });
+  const contextProfile = await buildUserContextProfile(userId, today);
+  const suggestionsResponse = await generateSuggestions(userId, contextProfile);
+  const suggestionIds = suggestionsResponse.suggestions.map(
+    (suggestion) => suggestion.id
+  );
+  const dailySuggestionTarget = suggestionIds.length;
 
-  if (totalGoals === 0) {
+  if (dailySuggestionTarget === 0) {
     return EMPTY_PROGRESS;
   }
 
   const todayDate = toDateOnly(today);
+  const tomorrowDate = addDays(todayDate, 1);
   const weekStartDate = toDateOnly(addDays(today, -6));
   const progressRecords = await prisma.suggestionProgress.findMany({
     where: {
       userId,
+      suggestionId: {
+        in: suggestionIds,
+      },
       completedAt: {
         gte: weekStartDate,
-        lte: todayDate,
+        lt: tomorrowDate,
       },
     },
     select: {
@@ -132,5 +140,9 @@ export async function getUserProgress(
     },
   });
 
-  return calculateProgressIndicators(totalGoals, progressRecords, today);
+  return calculateProgressIndicators(
+    dailySuggestionTarget,
+    progressRecords,
+    today
+  );
 }

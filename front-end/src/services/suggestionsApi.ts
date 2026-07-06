@@ -70,7 +70,7 @@ export async function fetchSuggestions(
   }
 }
 
-export async function completeSuggestion(suggestionId: string): Promise<void> {
+export async function completeSuggestion(suggestionId: string): Promise<boolean> {
   const token = await getAnonymousIdToken();
   const response = await apiFetch(
     `/users/suggestions/${encodeURIComponent(suggestionId)}/complete`,
@@ -82,10 +82,12 @@ export async function completeSuggestion(suggestionId: string): Promise<void> {
   const data = (await response.json().catch(() => ({}))) as CompleteSuggestionResponse;
 
   if (response.status === 409) {
-    return;
+    return false;
   }
 
   if (!response.ok) {
     throw new Error(data.error || data.erro || "Nao foi possivel concluir a sugestao.");
   }
+
+  return true;
 }

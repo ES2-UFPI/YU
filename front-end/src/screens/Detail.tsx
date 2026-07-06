@@ -23,7 +23,9 @@ export const DetailPage = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [source, setSource] = useState<"engine" | "cache" | "offline" | null>(null);
   const [loading, setLoading] = useState(true);
-  const [progressRefreshKey, setProgressRefreshKey] = useState(0);
+  const [completedSuggestionIds, setCompletedSuggestionIds] = useState<Set<string>>(
+    () => new Set()
+  );
 
   useEffect(() => {
     async function loadSuggestions() {
@@ -82,7 +84,8 @@ export const DetailPage = () => {
         }
         progressBar={
           <DailyProgressBar
-            refreshKey={progressRefreshKey}
+            completedSuggestionsDelta={completedSuggestionIds.size}
+            dailySuggestionTarget={suggestions.length}
             variant="header"
           />
         }
@@ -101,8 +104,17 @@ export const DetailPage = () => {
             iconColor="#59519e"
             cardSize={GOAL_CARD_SIZE}
             onCompleteBackend={async () => {
-              await completeSuggestion(suggestion.id);
-              setProgressRefreshKey((current) => current + 1);
+              const wasNewCompletion = await completeSuggestion(suggestion.id);
+
+              if (wasNewCompletion) {
+                setCompletedSuggestionIds((current) => {
+                  const next = new Set(current);
+                  next.add(suggestion.id);
+
+                  return next;
+                });
+              }
+
               console.log("Sugestão concluída:", suggestion.id);
             }}
           />
