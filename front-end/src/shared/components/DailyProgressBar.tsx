@@ -61,17 +61,16 @@ export function DailyProgressBar({
   style,
   variant = "default",
 }: DailyProgressBarProps) {
+  const hasProvidedCompleted = completedSuggestionsToday !== undefined;
+  const hasProvidedTarget = dailySuggestionTarget !== undefined;
   const [progress, setProgress] =
     useState<ProgressIndicators>(EMPTY_PROGRESS);
   const [loading, setLoading] = useState(
-    completedSuggestionsToday === undefined ||
-      dailySuggestionTarget === undefined
+    !hasProvidedCompleted && !hasProvidedTarget
   );
   const [error, setError] = useState<string | null>(null);
   const [trackWidth, setTrackWidth] = useState(0);
-  const shouldFetch =
-    completedSuggestionsToday === undefined ||
-    dailySuggestionTarget === undefined;
+  const shouldFetch = !hasProvidedCompleted || !hasProvidedTarget;
   const resolvedCompleted =
     (completedSuggestionsToday ?? progress.completedSuggestionsToday) +
     completedSuggestionsDelta;
@@ -96,7 +95,7 @@ export function DailyProgressBar({
 
     async function loadProgress() {
       try {
-        setLoading(true);
+        setLoading(!hasProvidedCompleted && !hasProvidedTarget);
         setError(null);
         const dailyProgress = await getDailyProgress();
 
@@ -106,9 +105,11 @@ export function DailyProgressBar({
       } catch (err) {
         if (active) {
           setError(
-            err instanceof Error
-              ? err.message
-              : "Nao foi possivel carregar o progresso diario."
+            hasProvidedCompleted || hasProvidedTarget
+              ? null
+              : err instanceof Error
+                ? err.message
+                : "Nao foi possivel carregar o progresso diario."
           );
         }
       } finally {
@@ -123,7 +124,14 @@ export function DailyProgressBar({
     return () => {
       active = false;
     };
-  }, [refreshKey, shouldFetch]);
+  }, [
+    hasProvidedCompleted,
+    hasProvidedTarget,
+    completedSuggestionsToday,
+    dailySuggestionTarget,
+    refreshKey,
+    shouldFetch,
+  ]);
 
   useEffect(() => {
     if (animationDuration === 0) {
