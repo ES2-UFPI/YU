@@ -19,7 +19,7 @@ import {
 } from "../services/suggestionsApi";
 
 const GOAL_CARD_SIZE = 80;
-// TODO: substituir pelo retorno real do endpoint apos a hotfix.
+// TODO: substituir estes dados mockados pelo retorno real do endpoint #56 apos a hotfix.
 const mockWeeklyRateDays = [
   { date: "2026-07-01", hasSuggestionDone: true },
   { date: "2026-07-02", hasSuggestionDone: false },
