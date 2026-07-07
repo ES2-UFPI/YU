@@ -1,18 +1,29 @@
-
-import { Text, View, StyleSheet } from "react-native";
-
+import { Text, View, StyleSheet, ScrollView } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { OfensiveHeader } from "../shared/components/OfensiveHeader";
 
 export const HomePage = () => {
-    return(
-        <View style = {styles.container}>
-            <Text>Home</Text>
-        </View>
-    );
-}
+  return (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      <OfensiveHeader />
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text>Home</Text>
+      </ScrollView>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    }
-})
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  list: {
+    paddingVertical: 12,
+    paddingBottom: 24,
+  },
+});
