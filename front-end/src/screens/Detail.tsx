@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { GoalCheckCard } from "../shared/components/GoalCheckCard";
 import { QuestHeader } from "../shared/components/QuestHeader";
 import { DailyProgressBar } from "../shared/components/DailyProgressBar";
+import { WeeklyRate } from "../shared/components/WeeklyRate";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import {
@@ -18,6 +19,16 @@ import {
 } from "../services/suggestionsApi";
 
 const GOAL_CARD_SIZE = 80;
+// TODO: substituir pelo retorno real do endpoint apos a hotfix.
+const mockWeeklyRateDays = [
+  { date: "2026-07-01", hasSuggestionDone: true },
+  { date: "2026-07-02", hasSuggestionDone: false },
+  { date: "2026-07-03", hasSuggestionDone: true },
+  { date: "2026-07-04", hasSuggestionDone: true },
+  { date: "2026-07-05", hasSuggestionDone: false },
+  { date: "2026-07-06", hasSuggestionDone: true },
+  { date: "2026-07-07", hasSuggestionDone: true },
+];
 
 export const DetailPage = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -96,6 +107,8 @@ export const DetailPage = () => {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
+        <WeeklyRate weeklyRate={71} days={mockWeeklyRateDays} />
+
         {suggestions.map((suggestion) => (
           <GoalCheckCard
             key={suggestion.id}
