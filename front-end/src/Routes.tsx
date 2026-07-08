@@ -12,7 +12,13 @@ const Stack = createNativeStackNavigator();
 const MainTabs = () => {
     return (
         <Tab.Navigator>
-            <Tab.Screen name="home" component={HomePage} />
+            <Tab.Screen
+            name="home"
+            component={HomePage}
+            options={{
+                headerShown: false,
+            }}
+            />
             <Tab.Screen
                 name="detail"
                 component={DetailPage}
