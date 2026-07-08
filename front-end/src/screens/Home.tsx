@@ -12,9 +12,6 @@ export const HomePage = () => {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.mascotCenter}>
-          <MascotAnimation state="triste" size={400} />
-        </View>
       </ScrollView>
     </View>
   );

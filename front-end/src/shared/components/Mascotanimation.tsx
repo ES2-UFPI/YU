@@ -4,20 +4,12 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
-  withSequence,
   withTiming,
   Easing,
   cancelAnimation,
 } from "react-native-reanimated";
 
-export type MascotState =
-  | "animado"
-  | "feliz"
-  | "neutro"
-  | "cansado"
-  | "triste"
-  | "sem_energia"
-  | "doente";
+
 
 type MascotAnimationProps = {
   state: MascotState;
@@ -27,10 +19,18 @@ type MascotAnimationProps = {
 const SPRITE_SIZE = 512;
 const FRAME_COUNT = 10;
 const FRAMES_PER_ROW = 10;
-const FPS = 12;
-const FRAME_DURATION = 1000 / FPS;
+const FPS = 16;
+const TOTAL_DURATION = (1000 / FPS) * FRAME_COUNT;
 
-const SPRITESHEET = require("../../../assets/mascot/spritesheets/spritesheet_yu_sad.png");
+export type MascotState = "doente" | "triste" | "neutro" | "feliz" | "animado";
+
+const SPRITESHEETS: Record<MascotState, ReturnType<typeof require>> = {
+  doente:  require("../../../assets/mascot/spritesheets/spritesheet_yu_doente.png"),
+  triste:  require("../../../assets/mascot/spritesheets/spritesheet_yu_sad.png"),
+  neutro:  require("../../../assets/mascot/spritesheets/spritesheet_yu_neutro.png"),
+  feliz:   require("../../../assets/mascot/spritesheets/spritesheet_yu_happy.png"),
+  animado: require("../../../assets/mascot/spritesheets/spritesheet_yu_animado.png"),
+};
 const SHADOW = require("../../../assets/mascot/spritesheets/shadow.png");
 
 export function MascotAnimation({ state, size = 300 }: MascotAnimationProps) {
@@ -44,14 +44,10 @@ export function MascotAnimation({ state, size = 300 }: MascotAnimationProps) {
     cancelAnimation(frameIndex);
     frameIndex.value = 0;
     frameIndex.value = withRepeat(
-      withSequence(
-        ...Array.from({ length: FRAME_COUNT }, (_, i) =>
-          withTiming(i, {
-            duration: FRAME_DURATION,
-            easing: Easing.steps(1, true),
-          })
-        )
-      ),
+      withTiming(FRAME_COUNT, {
+        duration: TOTAL_DURATION,
+        easing: Easing.steps(FRAME_COUNT, false),
+      }),
       -1,
       false
     );
@@ -61,8 +57,9 @@ export function MascotAnimation({ state, size = 300 }: MascotAnimationProps) {
   }, [state]);
 
   const animatedSheetStyle = useAnimatedStyle(() => {
-    const col = Math.floor(frameIndex.value) % FRAMES_PER_ROW;
-    const row = Math.floor(Math.floor(frameIndex.value) / FRAMES_PER_ROW);
+    const frame = Math.floor(frameIndex.value) % FRAME_COUNT;
+    const col = frame % FRAMES_PER_ROW;
+    const row = Math.floor(frame / FRAMES_PER_ROW);
     return {
       transform: [
         { translateX: -col * scaledSprite },
@@ -80,12 +77,12 @@ export function MascotAnimation({ state, size = 300 }: MascotAnimationProps) {
       />
       <View style={{ width: size, height: size, overflow: "hidden", marginTop: -size }}>
         <Animated.Image
-          source={SPRITESHEET}
+          source={SPRITESHEETS[state]}
           style={[
             { width: scaledSheet, height: scaledSprite },
             animatedSheetStyle,
           ]}
-          resizeMode="stretch"
+          resizeMode="contain"
         />
       </View>
     </View>
