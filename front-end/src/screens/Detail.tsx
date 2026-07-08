@@ -12,6 +12,7 @@ import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { WeeklyRate } from "../shared/components/WeeklyRate";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
+import { getDailyProgress, WeeklyHistoryDay } from "../services/progressApi";
 import {
   completeSuggestion,
   fetchSuggestions,
@@ -19,21 +20,12 @@ import {
 } from "../services/suggestionsApi";
 
 const GOAL_CARD_SIZE = 80;
-// TODO: substituir estes dados mockados pelo weeklyHistory retornado por /users/progress apos a hotfix do backend.
-const mockWeeklyRateDays = [
-  { day: 1 as const, hasSuggestionDone: true },
-  { day: 2 as const, hasSuggestionDone: false },
-  { day: 3 as const, hasSuggestionDone: true },
-  { day: 4 as const, hasSuggestionDone: true },
-  { day: 5 as const, hasSuggestionDone: false },
-  { day: 6 as const, hasSuggestionDone: true },
-  { day: 7 as const, hasSuggestionDone: true },
-];
 
 export const DetailPage = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [source, setSource] = useState<"engine" | "cache" | "offline" | null>(null);
   const [loading, setLoading] = useState(true);
+  const [weeklyHistory, setWeeklyHistory] = useState<WeeklyHistoryDay[]>([]);
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<Set<string>>(
     () => new Set()
   );
@@ -49,8 +41,10 @@ export const DetailPage = () => {
         }
 
         const result = await fetchSuggestions(token);
+        const progress = await getDailyProgress();
         setSuggestions(result.suggestions);
         setSource(result.source);
+        setWeeklyHistory(progress.weeklyHistory);
       } catch (error) {
         console.error("Erro ao carregar sugestões:", error);
       } finally {
@@ -107,7 +101,7 @@ export const DetailPage = () => {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        <WeeklyRate days={mockWeeklyRateDays} />
+        <WeeklyRate days={weeklyHistory} />
 
         {suggestions.map((suggestion) => (
           <GoalCheckCard

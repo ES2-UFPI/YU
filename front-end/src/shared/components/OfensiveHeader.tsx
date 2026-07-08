@@ -7,17 +7,6 @@ import { getDailyProgress } from "../../services/progressApi";
 const OFFENSIVE_ACTIVE = require("../../../assets/mascot/icons/icon_yu_ofensiva.png");
 const OFFENSIVE_OUT = require("../../../assets/mascot/icons/icon_yu_ofensiva_out.png");
 
-// TODO: substituir estes dados mockados pelo retorno real do endpoint #56 apos a hotfix.
-const mockWeeklyRateDays = [
-  { day: 1 as const, hasSuggestionDone: true },
-  { day: 2 as const, hasSuggestionDone: false },
-  { day: 3 as const, hasSuggestionDone: true },
-  { day: 4 as const, hasSuggestionDone: true },
-  { day: 5 as const, hasSuggestionDone: false },
-  { day: 6 as const, hasSuggestionDone: true },
-  { day: 7 as const, hasSuggestionDone: true },
-];
-
 export const OfensiveHeader = () => {
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -34,7 +23,7 @@ export const OfensiveHeader = () => {
       setWeeklyRate(data.weeklyRate);
       setCurrentStreak(data.currentStreak);
       setStreakBroken(data.currentStreak === 0);
-      setDays(mockWeeklyRateDays);
+      setDays(data.weeklyHistory);
     }
     load();
   }, []);
