@@ -1,66 +1,61 @@
 import { StyleSheet, Text, View } from "react-native";
 
+const WEEK_DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+
 export type WeeklyRateDay = {
-  date: string;
+  day: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   hasSuggestionDone: boolean;
 };
 
 type WeeklyRateProps = {
-  weeklyRate: number;
   days: WeeklyRateDay[];
 };
 
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+function getCurrentWeekDayNumber(): WeeklyRateDay["day"] {
+  const jsDay = new Date().getDay();
 
-  return `${year}-${month}-${day}`;
+  return (jsDay === 0 ? 7 : jsDay) as WeeklyRateDay["day"];
 }
 
-function normalizeWeeklyRate(weeklyRate: number): number {
-  if (!Number.isFinite(weeklyRate)) {
-    return 0;
-  }
-
-  const percentage = weeklyRate >= 0 && weeklyRate <= 1
-    ? weeklyRate * 100
-    : weeklyRate;
-
-  return Math.min(Math.max(Math.round(percentage), 0), 100);
+function getDayStatus(days: WeeklyRateDay[], day: WeeklyRateDay["day"]) {
+  return days.find((item) => item.day === day)?.hasSuggestionDone ?? false;
 }
 
-export function WeeklyRate({ weeklyRate, days }: WeeklyRateProps) {
-  const visibleDays = days.slice(0, 7);
-  const today = formatLocalDate(new Date());
-  const normalizedRate = normalizeWeeklyRate(weeklyRate);
+export function WeeklyRate({ days }: WeeklyRateProps) {
+  const currentDay = getCurrentWeekDayNumber();
+  const completedDaysCount = WEEK_DAYS.filter((day) => {
+    const isFutureDay = day > currentDay;
+
+    return !isFutureDay && getDayStatus(days, day);
+  }).length;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Desempenho semanal</Text>
 
       <View style={styles.daysRow}>
-        {visibleDays.map((day) => {
-          const isToday = day.date === today;
-          const dayNumber = day.date.slice(-2);
+        {WEEK_DAYS.map((day) => {
+          const isToday = day === currentDay;
+          const isFutureDay = day > currentDay;
+          const isDone = !isFutureDay && getDayStatus(days, day);
 
           return (
-            <View key={day.date} style={styles.dayItem}>
+            <View key={day} style={styles.dayItem}>
               <View
                 style={[
                   styles.dot,
-                  day.hasSuggestionDone && styles.dotDone,
+                  isDone && styles.dotDone,
                   isToday && styles.dotToday,
                 ]}
               >
                 <Text
                   style={[
                     styles.dayText,
-                    isToday && !day.hasSuggestionDone && styles.dayTextToday,
-                    day.hasSuggestionDone && styles.dayTextDone,
+                    isToday && !isDone && styles.dayTextToday,
+                    isDone && styles.dayTextDone,
                   ]}
                 >
-                  {dayNumber}
+                  {day}
                 </Text>
               </View>
             </View>
@@ -68,7 +63,9 @@ export function WeeklyRate({ weeklyRate, days }: WeeklyRateProps) {
         })}
       </View>
 
-      <Text style={styles.rateText}>{normalizedRate}% na semana</Text>
+      <Text style={styles.rateText}>
+        {completedDaysCount} de 7 dias com sugestões concluídas
+      </Text>
     </View>
   );
 }
