@@ -64,7 +64,7 @@ export const OfensiveHeader = () => {
 const styles = StyleSheet.create({
   header: {
     width: "100%",
-    backgroundColor: "#5d57c7",
+    // backgroundColor: "#5d57c7",
     alignItems: "center",
     justifyContent: "flex-end",
     paddingBottom: 20,
