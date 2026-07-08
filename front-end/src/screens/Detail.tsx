@@ -12,7 +12,11 @@ import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { WeeklyRate } from "../shared/components/WeeklyRate";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
-import { getDailyProgress, WeeklyHistoryDay } from "../services/progressApi";
+import {
+  getDailyProgress,
+  ProgressIndicators,
+  WeeklyHistoryDay,
+} from "../services/progressApi";
 import {
   completeSuggestion,
   fetchSuggestions,
@@ -26,9 +30,7 @@ export const DetailPage = () => {
   const [source, setSource] = useState<"engine" | "cache" | "offline" | null>(null);
   const [loading, setLoading] = useState(true);
   const [weeklyHistory, setWeeklyHistory] = useState<WeeklyHistoryDay[]>([]);
-  const [completedSuggestionIds, setCompletedSuggestionIds] = useState<Set<string>>(
-    () => new Set()
-  );
+  const [progress, setProgress] = useState<ProgressIndicators | null>(null);
 
   useEffect(() => {
     async function loadSuggestions() {
@@ -41,10 +43,11 @@ export const DetailPage = () => {
         }
 
         const result = await fetchSuggestions(token);
-        const progress = await getDailyProgress();
+        const dailyProgress = await getDailyProgress();
         setSuggestions(result.suggestions);
         setSource(result.source);
-        setWeeklyHistory(progress.weeklyHistory);
+        setProgress(dailyProgress);
+        setWeeklyHistory(dailyProgress.weeklyHistory);
       } catch (error) {
         console.error("Erro ao carregar sugestões:", error);
       } finally {
@@ -79,7 +82,6 @@ export const DetailPage = () => {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Header com progresso atualizado em tempo real */}
       <QuestHeader
         title="Bem-vindo!"
         subtitle={
@@ -89,14 +91,13 @@ export const DetailPage = () => {
         }
         progressBar={
           <DailyProgressBar
-            completedSuggestionsDelta={completedSuggestionIds.size}
-            dailySuggestionTarget={suggestions.length}
+            completedSuggestionsToday={progress?.completedSuggestionsToday}
+            dailySuggestionTarget={progress?.dailySuggestionTarget ?? suggestions.length}
             variant="header"
           />
         }
       />
 
-      {/* ScrollView */}
       <ScrollView
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -114,12 +115,9 @@ export const DetailPage = () => {
               const wasNewCompletion = await completeSuggestion(suggestion.id);
 
               if (wasNewCompletion) {
-                setCompletedSuggestionIds((current) => {
-                  const next = new Set(current);
-                  next.add(suggestion.id);
-
-                  return next;
-                });
+                const dailyProgress = await getDailyProgress();
+                setProgress(dailyProgress);
+                setWeeklyHistory(dailyProgress.weeklyHistory);
               }
 
               console.log("Sugestão concluída:", suggestion.id);

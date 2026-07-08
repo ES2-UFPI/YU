@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { View, StyleSheet, useWindowDimensions, Image, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { WeeklyRateHome, WeeklyRateDay } from "./WeeklyRateHome";
 import { getDailyProgress } from "../../services/progressApi";
 
@@ -17,16 +18,34 @@ export const OfensiveHeader = () => {
   const [streakBroken, setStreakBroken] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
 
-  useEffect(() => {
-    async function load() {
-      const data = await getDailyProgress();
-      setWeeklyRate(data.weeklyRate);
-      setCurrentStreak(data.currentStreak);
-      setStreakBroken(data.currentStreak === 0);
-      setDays(data.weeklyHistory);
-    }
-    load();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      async function load() {
+        try {
+          const data = await getDailyProgress();
+
+          if (!isActive) {
+            return;
+          }
+
+          setWeeklyRate(data.weeklyRate);
+          setCurrentStreak(data.currentStreak);
+          setStreakBroken(data.currentStreak === 0);
+          setDays(data.weeklyHistory);
+        } catch (error) {
+          console.error("Erro ao carregar progresso:", error);
+        }
+      }
+
+      load();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   return (
     <View style={[styles.header, { height: headerHeight, paddingTop: insets.top + 12 }]}>

@@ -68,7 +68,9 @@ function getCurrentWeekStart(date: Date): Date {
 }
 
 function toDateKey(value: Date | string): string {
-  return typeof value === "string" ? value.slice(0, 10) : formatDateOnly(value);
+  return typeof value === "string"
+    ? value.slice(0, 10)
+    : value.toISOString().slice(0, 10);
 }
 
 function roundRate(value: number): number {
