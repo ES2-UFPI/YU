@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 export type WeeklyRateDay = {
-  date: string;
+  day: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   hasSuggestionDone: boolean;
 };
 
@@ -10,45 +10,39 @@ type WeeklyRateProps = {
   days: WeeklyRateDay[];
 };
 
-function formatLocalDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 7] as const;
+
+function getTodayIndex(): number {
+  const jsDay = new Date().getDay();
+  const mapped = jsDay === 0 ? 7 : jsDay;
+  return WEEK_ORDER.indexOf(mapped as typeof WEEK_ORDER[number]);
 }
 
 export function WeeklyRateHome({ days }: WeeklyRateProps) {
-  const today = new Date();
-  const todayStr = formatLocalDate(today);
-  const todayWeekday = today.getDay();
+  const todayIndex = getTodayIndex();
 
-  const daysByWeekday = new Map(
-    days.map((d) => {
-      const weekday = new Date(d.date + "T00:00:00").getDay();
-      return [weekday, d];
-    })
-  );
+  const daysBySlot = new Map(days.map((d) => [d.day, d]));
 
-    const slots = [0, 1, 2, 3, 4, 5, 6].map((weekday, index) => {
-    const data = daysByWeekday.get(weekday) ?? null;
-    const isToday = data?.date === todayStr;
-    const isFuture = weekday > todayWeekday;
+  const slots = WEEK_ORDER.map((slot, index) => {
+    const data = daysBySlot.get(slot) ?? null;
+    const isToday = index === todayIndex;
+    const isFuture = index > todayIndex;
 
     return {
-        weekday,
-        data,
-        isToday,
-        isFuture,
-        dayNumber: String(index + 1),
-        isDone: !isFuture && (data?.hasSuggestionDone ?? false),
+      slot,
+      index,
+      isToday,
+      isFuture,
+      dayNumber: String(index + 1),
+      isDone: !isFuture && (data?.hasSuggestionDone ?? false),
     };
-    });
+  });
 
   return (
     <View style={styles.container}>
       <View style={styles.daysRow}>
-        {slots.map(({ weekday, dayNumber, isDone, isToday, isFuture }) => (
-          <View key={weekday} style={styles.dayItem}>
+        {slots.map(({ slot, dayNumber, isDone, isToday, isFuture }) => (
+          <View key={slot} style={styles.dayItem}>
             <View
               style={[
                 styles.dot,

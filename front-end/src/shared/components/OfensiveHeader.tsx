@@ -9,13 +9,13 @@ const OFFENSIVE_OUT = require("../../../assets/mascot/icons/icon_yu_ofensiva_out
 
 // TODO: substituir estes dados mockados pelo retorno real do endpoint #56 apos a hotfix.
 const mockWeeklyRateDays = [
-  { date: "2026-07-01", hasSuggestionDone: true },
-  { date: "2026-07-02", hasSuggestionDone: false },
-  { date: "2026-07-03", hasSuggestionDone: true },
-  { date: "2026-07-04", hasSuggestionDone: true },
-  { date: "2026-07-05", hasSuggestionDone: false },
-  { date: "2026-07-06", hasSuggestionDone: true },
-  { date: "2026-07-07", hasSuggestionDone: true },
+  { day: 1 as const, hasSuggestionDone: true },
+  { day: 2 as const, hasSuggestionDone: false },
+  { day: 3 as const, hasSuggestionDone: true },
+  { day: 4 as const, hasSuggestionDone: true },
+  { day: 5 as const, hasSuggestionDone: false },
+  { day: 6 as const, hasSuggestionDone: true },
+  { day: 7 as const, hasSuggestionDone: true },
 ];
 
 export const OfensiveHeader = () => {
