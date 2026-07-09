@@ -11,6 +11,7 @@ import { QuestHeader } from "../shared/components/QuestHeader";
 import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { WeeklyRate } from "../shared/components/WeeklyRate";
 import { MascotReactionCard } from "../shared/components/MascotReactionCard";
+import { appEventBus } from "../shared/events";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import {
@@ -122,6 +123,20 @@ export const DetailPage = () => {
               const wasNewCompletion = await completeSuggestion(suggestion.id);
 
               if (wasNewCompletion) {
+                /**
+                 * Observer:
+                 * publica um evento real de sugestao concluida.
+                 * A Home/Mascote observa esse evento sem depender diretamente desta tela.
+                 */
+                appEventBus.publish({
+                  type: "suggestionCompleted",
+                  payload: {
+                    suggestionId: suggestion.id,
+                    goalId: suggestion.goalId,
+                    createdAt: Date.now(),
+                  },
+                });
+
                 setCompletedSuggestionIds((current) => {
                   const next = new Set(current);
                   next.add(suggestion.id);
@@ -137,7 +152,31 @@ export const DetailPage = () => {
                   return next;
                 });
 
+                const previousStreak = progress?.currentStreak ?? 0;
                 const dailyProgress = await getDailyProgress();
+
+                if (previousStreak === 0 && dailyProgress.currentStreak > 0) {
+                  appEventBus.publish({
+                    type: "streakRecovered",
+                    payload: {
+                      previousStreak,
+                      currentStreak: dailyProgress.currentStreak,
+                      createdAt: Date.now(),
+                    },
+                  });
+                }
+
+                if (previousStreak > 0 && dailyProgress.currentStreak === 0) {
+                  appEventBus.publish({
+                    type: "streakBroken",
+                    payload: {
+                      previousStreak,
+                      currentStreak: dailyProgress.currentStreak,
+                      createdAt: Date.now(),
+                    },
+                  });
+                }
+
                 setProgress(dailyProgress);
                 setWeeklyHistory(dailyProgress.weeklyHistory);
               }
