@@ -21,13 +21,45 @@ model WellnessGoal {
 }
 
 model UserGoal {
-  id            String   @id @default(uuid())
-  userId        String
-  goalId        String
-  savedAt       DateTime @default(now())
-  active        Boolean  @default(true)
+  id      String   @id @default(uuid())
+  userId  String
+  goalId  String
+  savedAt DateTime @default(now())
+  active  Boolean  @default(true)
 
   wellnessGoal WellnessGoal @relation(fields: [goalId], references: [id])
 
   @@unique([userId, goalId])
+}
+
+model UserLocation {
+  id         String   @id @default(uuid())
+  userId     String
+  latitude   Float
+  longitude  Float
+  capturedAt DateTime @default(now())
+
+  @@map("user_locations")
+}
+
+model SuggestionProgress {
+  id           String   @id @default(uuid())
+  userId       String
+  suggestionId String
+  completedAt  DateTime @default(now()) @db.Date
+
+  @@unique([userId, suggestionId, completedAt])
+  @@map("suggestion_progress")
+}
+
+model WeatherData {
+  id          String   @id @default(uuid())
+  userId      String
+  temperature Float
+  condition   String
+  latitude    Float
+  longitude   Float
+  fetchedAt   DateTime @default(now())
+
+  @@map("weather_data")
 }

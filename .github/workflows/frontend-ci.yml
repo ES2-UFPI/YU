@@ -1,0 +1,70 @@
+name: CI - Front-end
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  frontend-ci:
+    name: Validar front-end
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: front-end
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+
+      - name: Diagnosticar arquivos do front-end
+        run: |
+          echo "=== REF E COMMIT ==="
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          git rev-parse HEAD
+
+          echo ""
+          echo "=== DIRETÓRIO ATUAL ==="
+          pwd
+
+          echo ""
+          echo "=== ARQUIVOS NA PASTA front-end ==="
+          ls -la
+
+          echo ""
+          echo "=== PROCURANDO PACKAGE.JSON E PACKAGE-LOCK.JSON ==="
+          find .. -name "package.json" -print
+          find .. -name "package-lock.json" -print
+
+          echo ""
+          echo "=== VERIFICANDO ARQUIVOS ESPERADOS ==="
+          test -f package.json && echo "package.json encontrado" || echo "package.json NÃO encontrado"
+          test -f package-lock.json && echo "package-lock.json encontrado" || echo "package-lock.json NÃO encontrado"
+
+          echo ""
+          echo "=== VALIDANDO PACKAGE-LOCK ==="
+          node -e "const fs=require('fs'); const p='package-lock.json'; if(!fs.existsSync(p)){console.error('package-lock.json não existe'); process.exit(1)} const lock=JSON.parse(fs.readFileSync(p,'utf8')); console.log('name:', lock.name); console.log('lockfileVersion:', lock.lockfileVersion); if(!lock.lockfileVersion){console.error('lockfileVersion ausente'); process.exit(1)}"
+
+          echo ""
+          echo "=== VERSÕES ==="
+          node -v
+          npm -v
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar TypeScript
+        run: npx tsc --noEmit
