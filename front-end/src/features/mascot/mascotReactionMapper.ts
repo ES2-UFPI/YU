@@ -1,4 +1,4 @@
-import type { MascotReaction, MascotReactionContext } from "./MascotReactionTypes";
+import type { MascotReaction, MascotReactionContext } from "./mascotReactionTypes";
 
 const DEFAULT_DAILY_SUGGESTION_TARGET = 5;
 
