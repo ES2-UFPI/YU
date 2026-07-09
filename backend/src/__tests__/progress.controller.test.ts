@@ -126,11 +126,7 @@ describe("getProgress", () => {
     expect(prismaMock.suggestionProgress.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-123",
-        suggestionId: {
-          in: ["drink-water", "read-pages", "study-focus", "hydrate-break"],
-        },
         completedAt: {
-          gte: new Date(2026, 6, 4),
           lt: new Date(2026, 6, 11),
         },
       },
@@ -147,8 +143,17 @@ describe("getProgress", () => {
       completedSuggestionsToday: 2,
       dailySuggestionTarget: 4,
       completionRateToday: 50,
-      weeklyRate: 21.43,
+      weeklyRate: 57.14,
       currentStreak: 3,
+      weeklyHistory: [
+        { day: 1, hasSuggestionDone: true },
+        { day: 2, hasSuggestionDone: false },
+        { day: 3, hasSuggestionDone: true },
+        { day: 4, hasSuggestionDone: true },
+        { day: 5, hasSuggestionDone: true },
+        { day: 6, hasSuggestionDone: false },
+        { day: 7, hasSuggestionDone: false },
+      ],
     });
   });
 
@@ -165,13 +170,28 @@ describe("getProgress", () => {
       total: 0,
       suggestions: [],
     });
+    prismaMock.suggestionProgress.findMany.mockResolvedValue([]);
 
     const req = createRequest();
     const res = createResponse();
 
     await getProgress(req, res);
 
-    expect(prismaMock.suggestionProgress.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.suggestionProgress.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user-123",
+        completedAt: {
+          lt: new Date(2026, 6, 11),
+        },
+      },
+      select: {
+        suggestionId: true,
+        completedAt: true,
+      },
+      orderBy: {
+        completedAt: "desc",
+      },
+    });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       completedSuggestionsToday: 0,
@@ -179,7 +199,66 @@ describe("getProgress", () => {
       completionRateToday: 0,
       weeklyRate: 0,
       currentStreak: 0,
+      weeklyHistory: [
+        { day: 1, hasSuggestionDone: false },
+        { day: 2, hasSuggestionDone: false },
+        { day: 3, hasSuggestionDone: false },
+        { day: 4, hasSuggestionDone: false },
+        { day: 5, hasSuggestionDone: false },
+        { day: 6, hasSuggestionDone: false },
+        { day: 7, hasSuggestionDone: false },
+      ],
     });
+  });
+
+  it("deve calcular streak a partir do historico real, mesmo com sugestoes diferentes das atuais", async () => {
+    const contextProfile = {
+      userId: "user-123",
+      generatedAt: "2026-07-10T12:00:00.000Z",
+      goals: ["hydration"],
+    };
+    buildUserContextProfileMock.mockResolvedValue(contextProfile);
+    generateSuggestionsMock.mockResolvedValue({
+      source: "engine",
+      contextProfile,
+      total: 2,
+      suggestions: [{ id: "drink-water" }, { id: "read-pages" }],
+    });
+    prismaMock.suggestionProgress.findMany.mockResolvedValue([
+      { suggestionId: "old-suggestion-today", completedAt: new Date(2026, 6, 10) },
+      { suggestionId: "old-suggestion-yesterday", completedAt: new Date(2026, 6, 9) },
+    ]);
+
+    const req = createRequest();
+    const res = createResponse();
+
+    await getProgress(req, res);
+
+    expect(prismaMock.suggestionProgress.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user-123",
+        completedAt: {
+          lt: new Date(2026, 6, 11),
+        },
+      },
+      select: {
+        suggestionId: true,
+        completedAt: true,
+      },
+      orderBy: {
+        completedAt: "desc",
+      },
+    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        completedSuggestionsToday: 1,
+        currentStreak: 2,
+        weeklyHistory: expect.arrayContaining([
+          { day: 4, hasSuggestionDone: true },
+          { day: 5, hasSuggestionDone: true },
+        ]),
+      })
+    );
   });
 
   it("deve retornar 401 quando nao houver usuario autenticado", async () => {

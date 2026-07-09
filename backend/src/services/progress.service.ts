@@ -7,12 +7,18 @@ type SuggestionProgressRecord = {
   completedAt: Date | string;
 };
 
+export type WeeklyHistoryDay = {
+  day: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  hasSuggestionDone: boolean;
+};
+
 export type ProgressIndicators = {
   completedSuggestionsToday: number;
   dailySuggestionTarget: number;
   completionRateToday: number;
   weeklyRate: number;
   currentStreak: number;
+  weeklyHistory: WeeklyHistoryDay[];
 };
 
 const EMPTY_PROGRESS: ProgressIndicators = {
@@ -21,6 +27,15 @@ const EMPTY_PROGRESS: ProgressIndicators = {
   completionRateToday: 0,
   weeklyRate: 0,
   currentStreak: 0,
+  weeklyHistory: [
+    { day: 1, hasSuggestionDone: false },
+    { day: 2, hasSuggestionDone: false },
+    { day: 3, hasSuggestionDone: false },
+    { day: 4, hasSuggestionDone: false },
+    { day: 5, hasSuggestionDone: false },
+    { day: 6, hasSuggestionDone: false },
+    { day: 7, hasSuggestionDone: false },
+  ],
 };
 
 function formatDateOnly(date: Date): string {
@@ -42,8 +57,20 @@ function toDateOnly(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+function getWeekDayNumber(date: Date): WeeklyHistoryDay["day"] {
+  const day = date.getDay();
+
+  return (day === 0 ? 7 : day) as WeeklyHistoryDay["day"];
+}
+
+function getCurrentWeekStart(date: Date): Date {
+  return addDays(toDateOnly(date), -(getWeekDayNumber(date) - 1));
+}
+
 function toDateKey(value: Date | string): string {
-  return typeof value === "string" ? value.slice(0, 10) : formatDateOnly(value);
+  return typeof value === "string"
+    ? value.slice(0, 10)
+    : value.toISOString().slice(0, 10);
 }
 
 function roundRate(value: number): number {
@@ -78,27 +105,48 @@ function calculateCurrentStreak(
   }
 }
 
+function buildWeeklyHistory(
+  completionsByDate: Map<string, number>,
+  today: Date
+): WeeklyHistoryDay[] {
+  const currentDay = getWeekDayNumber(today);
+  const weekStart = getCurrentWeekStart(today);
+
+  return [1, 2, 3, 4, 5, 6, 7].map((day) => {
+    const weekDay = day as WeeklyHistoryDay["day"];
+    const dateKey = formatDateOnly(addDays(weekStart, day - 1));
+
+    return {
+      day: weekDay,
+      hasSuggestionDone: weekDay <= currentDay && completionsByDate.has(dateKey),
+    };
+  });
+}
+
 function calculateProgressIndicators(
   dailySuggestionTarget: number,
   records: SuggestionProgressRecord[],
   today: Date
 ): ProgressIndicators {
-  if (dailySuggestionTarget === 0) {
-    return EMPTY_PROGRESS;
-  }
-
   const todayKey = formatDateOnly(today);
   const completionsByDate = countCompletionsByDate(records);
-  const completedSuggestionsToday = completionsByDate.get(todayKey) ?? 0;
+  const weeklyHistory = buildWeeklyHistory(completionsByDate, today);
+  const completedSuggestionsToday =
+    dailySuggestionTarget === 0 ? 0 : completionsByDate.get(todayKey) ?? 0;
+  const completedWeekDays = weeklyHistory.filter(
+    (day) => day.hasSuggestionDone
+  ).length;
 
   return {
     completedSuggestionsToday,
     dailySuggestionTarget,
-    completionRateToday: roundRate(
-      (completedSuggestionsToday / dailySuggestionTarget) * 100
-    ),
-    weeklyRate: roundRate((records.length / (dailySuggestionTarget * 7)) * 100),
+    completionRateToday:
+      dailySuggestionTarget === 0
+        ? 0
+        : roundRate((completedSuggestionsToday / dailySuggestionTarget) * 100),
+    weeklyRate: roundRate((completedWeekDays / 7) * 100),
     currentStreak: calculateCurrentStreak(completionsByDate, today),
+    weeklyHistory,
   };
 }
 
@@ -113,21 +161,12 @@ export async function getUserProgress(
   );
   const dailySuggestionTarget = suggestionIds.length;
 
-  if (dailySuggestionTarget === 0) {
-    return EMPTY_PROGRESS;
-  }
-
   const todayDate = toDateOnly(today);
   const tomorrowDate = addDays(todayDate, 1);
-  const weekStartDate = toDateOnly(addDays(today, -6));
   const progressRecords = await prisma.suggestionProgress.findMany({
     where: {
       userId,
-      suggestionId: {
-        in: suggestionIds,
-      },
       completedAt: {
-        gte: weekStartDate,
         lt: tomorrowDate,
       },
     },

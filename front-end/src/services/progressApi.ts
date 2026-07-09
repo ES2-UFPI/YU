@@ -7,6 +7,12 @@ export type ProgressIndicators = {
   completionRateToday: number;
   weeklyRate: number;
   currentStreak: number;
+  weeklyHistory: WeeklyHistoryDay[];
+};
+
+export type WeeklyHistoryDay = {
+  day: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  hasSuggestionDone: boolean;
 };
 
 type ProgressResponse = Partial<ProgressIndicators> & {
@@ -20,6 +26,15 @@ const EMPTY_PROGRESS: ProgressIndicators = {
   completionRateToday: 0,
   weeklyRate: 0,
   currentStreak: 0,
+  weeklyHistory: [
+    { day: 1, hasSuggestionDone: false },
+    { day: 2, hasSuggestionDone: false },
+    { day: 3, hasSuggestionDone: false },
+    { day: 4, hasSuggestionDone: false },
+    { day: 5, hasSuggestionDone: false },
+    { day: 6, hasSuggestionDone: false },
+    { day: 7, hasSuggestionDone: false },
+  ],
 };
 
 export async function getDailyProgress(): Promise<ProgressIndicators> {

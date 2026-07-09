@@ -13,30 +13,24 @@ import { WeeklyRate } from "../shared/components/WeeklyRate";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import {
+  getDailyProgress,
+  ProgressIndicators,
+  WeeklyHistoryDay,
+} from "../services/progressApi";
+import {
   completeSuggestion,
   fetchSuggestions,
   Suggestion,
 } from "../services/suggestionsApi";
 
 const GOAL_CARD_SIZE = 80;
-// TODO: substituir estes dados mockados pelo weeklyHistory retornado por /users/progress apos a hotfix do backend.
-const mockWeeklyRateDays = [
-  { day: 1 as const, hasSuggestionDone: true },
-  { day: 2 as const, hasSuggestionDone: false },
-  { day: 3 as const, hasSuggestionDone: true },
-  { day: 4 as const, hasSuggestionDone: true },
-  { day: 5 as const, hasSuggestionDone: false },
-  { day: 6 as const, hasSuggestionDone: true },
-  { day: 7 as const, hasSuggestionDone: true },
-];
 
 export const DetailPage = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [source, setSource] = useState<"engine" | "cache" | "offline" | null>(null);
   const [loading, setLoading] = useState(true);
-  const [completedSuggestionIds, setCompletedSuggestionIds] = useState<Set<string>>(
-    () => new Set()
-  );
+  const [weeklyHistory, setWeeklyHistory] = useState<WeeklyHistoryDay[]>([]);
+  const [progress, setProgress] = useState<ProgressIndicators | null>(null);
 
   useEffect(() => {
     async function loadSuggestions() {
@@ -49,8 +43,11 @@ export const DetailPage = () => {
         }
 
         const result = await fetchSuggestions(token);
+        const dailyProgress = await getDailyProgress();
         setSuggestions(result.suggestions);
         setSource(result.source);
+        setProgress(dailyProgress);
+        setWeeklyHistory(dailyProgress.weeklyHistory);
       } catch (error) {
         console.error("Erro ao carregar sugestões:", error);
       } finally {
@@ -85,7 +82,6 @@ export const DetailPage = () => {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Header com progresso atualizado em tempo real */}
       <QuestHeader
         title="Bem-vindo!"
         subtitle={
@@ -95,19 +91,18 @@ export const DetailPage = () => {
         }
         progressBar={
           <DailyProgressBar
-            completedSuggestionsDelta={completedSuggestionIds.size}
-            dailySuggestionTarget={suggestions.length}
+            completedSuggestionsToday={progress?.completedSuggestionsToday}
+            dailySuggestionTarget={progress?.dailySuggestionTarget ?? suggestions.length}
             variant="header"
           />
         }
       />
 
-      {/* ScrollView */}
       <ScrollView
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        <WeeklyRate days={mockWeeklyRateDays} />
+        <WeeklyRate days={weeklyHistory} />
 
         {suggestions.map((suggestion) => (
           <GoalCheckCard
@@ -120,12 +115,9 @@ export const DetailPage = () => {
               const wasNewCompletion = await completeSuggestion(suggestion.id);
 
               if (wasNewCompletion) {
-                setCompletedSuggestionIds((current) => {
-                  const next = new Set(current);
-                  next.add(suggestion.id);
-
-                  return next;
-                });
+                const dailyProgress = await getDailyProgress();
+                setProgress(dailyProgress);
+                setWeeklyHistory(dailyProgress.weeklyHistory);
               }
 
               console.log("Sugestão concluída:", suggestion.id);
