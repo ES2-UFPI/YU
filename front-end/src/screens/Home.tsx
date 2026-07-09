@@ -9,13 +9,20 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+
 import { OfensiveHeader } from "../shared/components/OfensiveHeader";
-import { MascotAnimation } from "../shared/components/Mascotanimation";
 import { MascotSpeechBubble } from "../shared/components/MascotSpeechBubble";
-import type { MascotState } from "../features/mascot";
-import { getMascotStateWithOfflineFallback } from "../features/mascot";
+import { Mascote, resolveMascotState } from "../features/mascot";
+import type {
+  MascotContext,
+  MascotEvent,
+  MascotState,
+} from "../features/mascot";
+import {
+  getDailyProgress,
+  type WeeklyHistoryDay,
+} from "../services/progressApi";
 import { getAnonymousIdToken } from "../services/firebase";
-import { getDailyProgress } from "../services/progressApi";
 import { fetchSuggestions } from "../services/suggestionsApi";
 import type { Suggestion } from "../services/suggestionsApi";
 
@@ -59,6 +66,36 @@ const CELEBRATION_SUGGESTION: SpeechSuggestion = {
   source: "celebration",
 };
 
+function getCurrentWeekDayNumber(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
+  const jsDay = new Date().getDay();
+
+  return (jsDay === 0 ? 7 : jsDay) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+}
+
+function getYesterdayWeekDayNumber(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
+  const currentDay = getCurrentWeekDayNumber();
+
+  return (currentDay === 1 ? 7 : currentDay - 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+}
+
+function buildMascotHistoryFromWeeklyHistory(
+  weeklyHistory: WeeklyHistoryDay[]
+): MascotContext["history"] {
+  const yesterdayDay = getYesterdayWeekDayNumber();
+  const yesterday = weeklyHistory.find((item) => item.day === yesterdayDay);
+
+  if (!yesterday) {
+    return [];
+  }
+
+  return [
+    {
+      date: `day-${yesterdayDay}`,
+      completedSuggestions: yesterday.hasSuggestionDone ? 1 : 0,
+    },
+  ];
+}
+
 async function pickSuggestion(
   suggestions: Suggestion[],
   source: SpeechSuggestion["source"]
@@ -72,9 +109,7 @@ async function pickSuggestion(
   ).catch(() => null);
   const availableSuggestions =
     suggestions.length > 1
-      ? suggestions.filter(
-          (suggestion) => suggestion.id !== lastSuggestionId
-        )
+      ? suggestions.filter((suggestion) => suggestion.id !== lastSuggestionId)
       : suggestions;
   const index = Math.floor(Math.random() * availableSuggestions.length);
   const nextSuggestion = availableSuggestions[index];
@@ -125,42 +160,41 @@ async function shouldShowCelebrationToday(): Promise<boolean> {
 }
 
 export const HomePage = () => {
-  const [mascotState, setMascotState] = useState<MascotState>("neutro");
+  const [mascotContext, setMascotContext] = useState<MascotContext | null>(null);
+  const [mascotEvent, setMascotEvent] = useState<MascotEvent | null>(null);
   const [speechSuggestion, setSpeechSuggestion] =
     useState<SpeechSuggestion | null>(null);
   const [isBubbleVisible, setIsBubbleVisible] = useState(true);
   const bubbleProgress = useSharedValue(0);
 
+  const mascotState: MascotState = useMemo(
+    () => (mascotContext ? resolveMascotState(mascotContext) : "neutro"),
+    [mascotContext]
+  );
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      async function loadMascotSuggestion() {
+      async function loadHomeData() {
         try {
           const [progress, token] = await Promise.all([
-            getDailyProgress().catch(() => null),
+            getDailyProgress(),
             getAnonymousIdToken(),
           ]);
 
-          const nextMascotState = await getMascotStateWithOfflineFallback(
-            progress
-              ? {
-                  completedSuggestionsToday: progress.completedSuggestionsToday,
-                  dailySuggestionTarget: progress.dailySuggestionTarget,
-                }
-              : null
-          );
+          const nextMascotContext: MascotContext = {
+            completedSuggestionsToday: progress.completedSuggestionsToday,
+            dailySuggestionTarget: progress.dailySuggestionTarget || 5,
+            history: buildMascotHistoryFromWeeklyHistory(progress.weeklyHistory),
+            isOffline: false,
+          };
 
           const suggestionsResult = await fetchSuggestions(token);
-          const completedSuggestionsToday =
-            progress?.completedSuggestionsToday ?? 0;
+          const completedSuggestionsToday = progress.completedSuggestionsToday;
           const allSuggestionsCompleted =
             suggestionsResult.suggestions.length > 0 &&
             completedSuggestionsToday >= suggestionsResult.suggestions.length;
-
-          if (!isActive) {
-            return;
-          }
 
           const shouldShowCelebration =
             allSuggestionsCompleted && (await shouldShowCelebrationToday());
@@ -179,22 +213,25 @@ export const HomePage = () => {
             return;
           }
 
-          setMascotState(nextMascotState);
+          setMascotContext(nextMascotContext);
+          setMascotEvent(null);
           setSpeechSuggestion(nextSpeechSuggestion);
           setIsBubbleVisible(nextSpeechSuggestion !== null);
         } catch (error) {
-          console.warn("Nao foi possivel carregar sugestao do mascote.", error);
+          console.error("Erro ao carregar dados da Home:", error);
 
           if (!isActive) {
             return;
           }
 
+          setMascotContext(null);
+          setMascotEvent(null);
           setSpeechSuggestion(null);
           setIsBubbleVisible(false);
         }
       }
 
-      loadMascotSuggestion();
+      loadHomeData();
 
       return () => {
         isActive = false;
@@ -209,9 +246,11 @@ export const HomePage = () => {
 
     return buildMascotSpeech(speechSuggestion, mascotState);
   }, [mascotState, speechSuggestion]);
+
   const shouldRenderBubble = isBubbleVisible && speechSuggestion;
+
   const animatedBubbleSpaceStyle = useAnimatedStyle(() => ({
-    height: BUBBLE_SPACE_HEIGHT * bubbleProgress.value,
+    height: BUBBLE_SPACE_HEIGHT * (shouldRenderBubble ? bubbleProgress.value : 0),
     opacity: bubbleProgress.value,
     transform: [
       {
@@ -252,7 +291,8 @@ export const HomePage = () => {
               />
             )}
           </Animated.View>
-          <MascotAnimation state={mascotState} size={280} />
+
+          <Mascote context={mascotContext} event={mascotEvent} size={360} />
         </View>
       </ScrollView>
     </View>
