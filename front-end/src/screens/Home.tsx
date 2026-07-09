@@ -1,19 +1,80 @@
-import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useMemo, useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+
 import { OfensiveHeader } from "../shared/components/OfensiveHeader";
-import { Mascote } from "../features/mascot";
-import type { MascotContext, MascotEvent } from "../features/mascot";
-import { getDailyProgress, type WeeklyHistoryDay } from "../services/progressApi";
+import { MascotSpeechBubble } from "../shared/components/MascotSpeechBubble";
+import { Mascote, resolveMascotState } from "../features/mascot";
+import type {
+  MascotContext,
+  MascotEvent,
+  MascotState,
+} from "../features/mascot";
+import {
+  getDailyProgress,
+  type WeeklyHistoryDay,
+} from "../services/progressApi";
+import { getAnonymousIdToken } from "../services/firebase";
+import { fetchSuggestions } from "../services/suggestionsApi";
+import type { Suggestion } from "../services/suggestionsApi";
+
+type SpeechSuggestion = Suggestion & {
+  source: "engine" | "cache" | "offline" | "celebration";
+};
+
+const LAST_SPEECH_SUGGESTION_KEY = "@yu:mascot:last_speech_suggestion";
+const LAST_CELEBRATION_DATE_KEY = "@yu:mascot:last_celebration_date";
+const BUBBLE_SPACE_HEIGHT = 205;
+
+const SPEECH_PREFIX: Record<MascotState, string[]> = {
+  doente: [
+    "Eu estou meio sem energia hoje. Vamos tentar algo pequeno?",
+    "A gente pode recomecar devagar. Que tal essa missao?",
+  ],
+  triste: [
+    "Senti falta de ver voce cuidando de si. Posso te sugerir uma coisa?",
+    "Vamos dar um passinho juntos? Acho que isso combina com agora.",
+  ],
+  neutro: [
+    "Tenho uma ideia tranquila para agora.",
+    "Essa missao parece uma boa para o seu momento.",
+  ],
+  feliz: [
+    "Boa, voce ja esta embalando. Vamos manter esse ritmo?",
+    "Estou gostando desse cuidado. Tenho mais uma ideia para voce.",
+  ],
+  animado: [
+    "Voce esta voando hoje. Bora completar mais uma?",
+    "Estou animado com seu progresso. Essa pode fechar bonito.",
+  ],
+};
+
+const CELEBRATION_SUGGESTION: SpeechSuggestion = {
+  id: "daily-celebration",
+  title: "Tudo concluido por hoje",
+  description:
+    "Voce completou todas as missoes disponiveis. Eu adorei ver esse cuidado acontecendo.",
+  category: "wellbeing",
+  source: "celebration",
+};
 
 function getCurrentWeekDayNumber(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
   const jsDay = new Date().getDay();
+
   return (jsDay === 0 ? 7 : jsDay) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 
 function getYesterdayWeekDayNumber(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
   const currentDay = getCurrentWeekDayNumber();
+
   return (currentDay === 1 ? 7 : currentDay - 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 
@@ -35,46 +96,198 @@ function buildMascotHistoryFromWeeklyHistory(
   ];
 }
 
+async function pickSuggestion(
+  suggestions: Suggestion[],
+  source: SpeechSuggestion["source"]
+): Promise<SpeechSuggestion | null> {
+  if (suggestions.length === 0) {
+    return null;
+  }
+
+  const lastSuggestionId = await AsyncStorage.getItem(
+    LAST_SPEECH_SUGGESTION_KEY
+  ).catch(() => null);
+  const availableSuggestions =
+    suggestions.length > 1
+      ? suggestions.filter((suggestion) => suggestion.id !== lastSuggestionId)
+      : suggestions;
+  const index = Math.floor(Math.random() * availableSuggestions.length);
+  const nextSuggestion = availableSuggestions[index];
+
+  await AsyncStorage.setItem(LAST_SPEECH_SUGGESTION_KEY, nextSuggestion.id).catch(
+    () => undefined
+  );
+
+  return {
+    ...nextSuggestion,
+    source,
+  };
+}
+
+function buildMascotSpeech(
+  suggestion: SpeechSuggestion,
+  mascotState: MascotState
+): string {
+  if (suggestion.source === "celebration") {
+    return `${suggestion.title}: ${suggestion.description}`;
+  }
+
+  const prefixes = SPEECH_PREFIX[mascotState];
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+
+  return `${prefix} ${suggestion.title}: ${suggestion.description}`;
+}
+
+function getTodayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function shouldShowCelebrationToday(): Promise<boolean> {
+  const todayKey = getTodayKey();
+  const lastCelebrationDate = await AsyncStorage.getItem(
+    LAST_CELEBRATION_DATE_KEY
+  ).catch(() => null);
+
+  if (lastCelebrationDate === todayKey) {
+    return false;
+  }
+
+  await AsyncStorage.setItem(LAST_CELEBRATION_DATE_KEY, todayKey).catch(
+    () => undefined
+  );
+
+  return true;
+}
+
 export const HomePage = () => {
   const [mascotContext, setMascotContext] = useState<MascotContext | null>(null);
   const [mascotEvent, setMascotEvent] = useState<MascotEvent | null>(null);
+  const [speechSuggestion, setSpeechSuggestion] =
+    useState<SpeechSuggestion | null>(null);
+  const [isBubbleVisible, setIsBubbleVisible] = useState(true);
+  const bubbleProgress = useSharedValue(0);
+
+  const mascotState: MascotState = useMemo(
+    () => (mascotContext ? resolveMascotState(mascotContext) : "neutro"),
+    [mascotContext]
+  );
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      async function loadMascotContext() {
+      async function loadHomeData() {
+        let progress: Awaited<ReturnType<typeof getDailyProgress>> | null = null;
+      
         try {
-          const progress = await getDailyProgress();
-
+          progress = await getDailyProgress();
+      
           const nextMascotContext: MascotContext = {
             completedSuggestionsToday: progress.completedSuggestionsToday,
             dailySuggestionTarget: progress.dailySuggestionTarget || 5,
             history: buildMascotHistoryFromWeeklyHistory(progress.weeklyHistory),
             isOffline: false,
           };
-
-          if (isActive) {
-            setMascotContext(nextMascotContext);
-            setMascotEvent(null);
+      
+          if (!isActive) {
+            return;
           }
+      
+          setMascotContext(nextMascotContext);
+          setMascotEvent(null);
         } catch (error) {
-          console.error("Erro ao carregar dados do mascote:", error);
-
-          if (isActive) {
-            setMascotContext(null);
-            setMascotEvent(null);
+          console.error("Erro ao carregar progresso do mascote:", error);
+      
+          if (!isActive) {
+            return;
           }
+      
+          setMascotContext(null);
+          setMascotEvent(null);
+        }
+      
+        try {
+          const token = await getAnonymousIdToken();
+          const suggestionsResult = await fetchSuggestions(token);
+      
+          const completedSuggestionsToday = progress?.completedSuggestionsToday ?? 0;
+          const allSuggestionsCompleted =
+            progress !== null &&
+            suggestionsResult.suggestions.length > 0 &&
+            completedSuggestionsToday >= suggestionsResult.suggestions.length;
+      
+          const shouldShowCelebration =
+            allSuggestionsCompleted && (await shouldShowCelebrationToday());
+      
+          const nextSpeechSuggestion = allSuggestionsCompleted
+            ? shouldShowCelebration
+              ? CELEBRATION_SUGGESTION
+              : null
+            : await pickSuggestion(
+                suggestionsResult.suggestions,
+                suggestionsResult.source === "offline"
+                  ? "offline"
+                  : suggestionsResult.source
+              );
+      
+          if (!isActive) {
+            return;
+          }
+      
+          setSpeechSuggestion(nextSpeechSuggestion);
+          setIsBubbleVisible(nextSpeechSuggestion !== null);
+        } catch (error) {
+          console.warn("Nao foi possivel carregar sugestao do mascote.", error);
+      
+          if (!isActive) {
+            return;
+          }
+      
+          setSpeechSuggestion(null);
+          setIsBubbleVisible(false);
         }
       }
 
-      loadMascotContext();
+      loadHomeData();
 
       return () => {
         isActive = false;
       };
     }, [])
   );
+
+  const speechMessage = useMemo(() => {
+    if (!speechSuggestion) {
+      return "";
+    }
+
+    return buildMascotSpeech(speechSuggestion, mascotState);
+  }, [mascotState, speechSuggestion]);
+
+  const shouldRenderBubble = isBubbleVisible && speechSuggestion;
+
+  const animatedBubbleSpaceStyle = useAnimatedStyle(() => ({
+    height: BUBBLE_SPACE_HEIGHT * bubbleProgress.value,
+    opacity: bubbleProgress.value,
+    transform: [
+      {
+        translateY: (1 - bubbleProgress.value) * 12,
+      },
+    ],
+  }));
+
+  useFocusEffect(
+    useCallback(() => {
+      bubbleProgress.value = withTiming(shouldRenderBubble ? 1 : 0, {
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+      });
+    }, [bubbleProgress, shouldRenderBubble])
+  );
+
+  function dismissBubble() {
+    setIsBubbleVisible(false);
+  }
 
   return (
     <View style={styles.container}>
@@ -85,6 +298,17 @@ export const HomePage = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.mascotCenter}>
+          <Animated.View style={[styles.bubbleSlot, animatedBubbleSpaceStyle]}>
+            {speechSuggestion && (
+              <MascotSpeechBubble
+                isOffline={speechSuggestion.source === "offline"}
+                mascotState={mascotState}
+                message={speechMessage}
+                onDismiss={dismissBubble}
+              />
+            )}
+          </Animated.View>
+
           <Mascote context={mascotContext} event={mascotEvent} size={360} />
         </View>
       </ScrollView>
@@ -108,5 +332,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 24,
+    width: "100%",
+  },
+  bubbleSlot: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+    overflow: "hidden",
+    width: "100%",
   },
 });
