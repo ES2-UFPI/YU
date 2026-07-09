@@ -177,27 +177,48 @@ export const HomePage = () => {
       let isActive = true;
 
       async function loadHomeData() {
+        let progress: Awaited<ReturnType<typeof getDailyProgress>> | null = null;
+      
         try {
-          const [progress, token] = await Promise.all([
-            getDailyProgress(),
-            getAnonymousIdToken(),
-          ]);
-
+          progress = await getDailyProgress();
+      
           const nextMascotContext: MascotContext = {
             completedSuggestionsToday: progress.completedSuggestionsToday,
             dailySuggestionTarget: progress.dailySuggestionTarget || 5,
             history: buildMascotHistoryFromWeeklyHistory(progress.weeklyHistory),
             isOffline: false,
           };
-
+      
+          if (!isActive) {
+            return;
+          }
+      
+          setMascotContext(nextMascotContext);
+          setMascotEvent(null);
+        } catch (error) {
+          console.error("Erro ao carregar progresso do mascote:", error);
+      
+          if (!isActive) {
+            return;
+          }
+      
+          setMascotContext(null);
+          setMascotEvent(null);
+        }
+      
+        try {
+          const token = await getAnonymousIdToken();
           const suggestionsResult = await fetchSuggestions(token);
-          const completedSuggestionsToday = progress.completedSuggestionsToday;
+      
+          const completedSuggestionsToday = progress?.completedSuggestionsToday ?? 0;
           const allSuggestionsCompleted =
+            progress !== null &&
             suggestionsResult.suggestions.length > 0 &&
             completedSuggestionsToday >= suggestionsResult.suggestions.length;
-
+      
           const shouldShowCelebration =
             allSuggestionsCompleted && (await shouldShowCelebrationToday());
+      
           const nextSpeechSuggestion = allSuggestionsCompleted
             ? shouldShowCelebration
               ? CELEBRATION_SUGGESTION
@@ -208,24 +229,20 @@ export const HomePage = () => {
                   ? "offline"
                   : suggestionsResult.source
               );
-
+      
           if (!isActive) {
             return;
           }
-
-          setMascotContext(nextMascotContext);
-          setMascotEvent(null);
+      
           setSpeechSuggestion(nextSpeechSuggestion);
           setIsBubbleVisible(nextSpeechSuggestion !== null);
         } catch (error) {
-          console.error("Erro ao carregar dados da Home:", error);
-
+          console.warn("Nao foi possivel carregar sugestao do mascote.", error);
+      
           if (!isActive) {
             return;
           }
-
-          setMascotContext(null);
-          setMascotEvent(null);
+      
           setSpeechSuggestion(null);
           setIsBubbleVisible(false);
         }
@@ -250,7 +267,7 @@ export const HomePage = () => {
   const shouldRenderBubble = isBubbleVisible && speechSuggestion;
 
   const animatedBubbleSpaceStyle = useAnimatedStyle(() => ({
-    height: BUBBLE_SPACE_HEIGHT * (shouldRenderBubble ? bubbleProgress.value : 0),
+    height: BUBBLE_SPACE_HEIGHT * bubbleProgress.value,
     opacity: bubbleProgress.value,
     transform: [
       {
