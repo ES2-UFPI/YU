@@ -420,15 +420,15 @@ const styles = StyleSheet.create({
   },
   list: {
     flexGrow: 1,
-    paddingVertical: 12,
-    paddingBottom: 24,
+    paddingVertical: 0,
+    paddingBottom: 0,
     alignItems: "center",
     justifyContent: "center",
   },
   mascotCenter: {
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 24,
+    marginVertical: 0,
     width: "100%",
   },
   bubbleSlot: {
