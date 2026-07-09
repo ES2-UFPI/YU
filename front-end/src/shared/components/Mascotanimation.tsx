@@ -9,7 +9,7 @@ import Animated, {
   cancelAnimation,
 } from "react-native-reanimated";
 
-
+import type { MascotState } from "../../features/mascot/mascotTypes";
 
 type MascotAnimationProps = {
   state: MascotState;
@@ -21,8 +21,6 @@ const FRAME_COUNT = 10;
 const FRAMES_PER_ROW = 10;
 const FPS = 16;
 const TOTAL_DURATION = (1000 / FPS) * FRAME_COUNT;
-
-export type MascotState = "doente" | "triste" | "neutro" | "feliz" | "animado";
 
 const SPRITESHEETS: Record<MascotState, ReturnType<typeof require>> = {
   doente:  require("../../../assets/mascot/spritesheets/spritesheet_yu_doente.png"),
