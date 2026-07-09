@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,6 +12,7 @@ import Animated, {
 
 import { OfensiveHeader } from "../shared/components/OfensiveHeader";
 import { MascotSpeechBubble } from "../shared/components/MascotSpeechBubble";
+import { appEventBus, type AppEvent } from "../shared/events";
 import { Mascote } from "../features/mascot";
 import type {
   MascotContext,
@@ -159,6 +160,40 @@ async function shouldShowCelebrationToday(): Promise<boolean> {
   return true;
 }
 
+function mapAppEventToMascotEvent(event: AppEvent): MascotEvent | null {
+  if (event.type === "suggestionCompleted") {
+    return {
+      type: "metaCumprida",
+      id: event.payload.suggestionId,
+      createdAt: event.payload.createdAt,
+    };
+  }
+
+  if (event.type === "suggestionIgnored") {
+    return {
+      type: "sugestaoIgnorada",
+      id: event.payload.suggestionId,
+      createdAt: event.payload.createdAt,
+    };
+  }
+
+  if (event.type === "streakBroken") {
+    return {
+      type: "streakQuebrada",
+      createdAt: event.payload.createdAt,
+    };
+  }
+
+  if (event.type === "streakRecovered") {
+    return {
+      type: "streakRecuperada",
+      createdAt: event.payload.createdAt,
+    };
+  }
+
+  return null;
+}
+
 export const HomePage = () => {
   const [mascotContext, setMascotContext] = useState<MascotContext | null>(null);
   const [mascotEvent, setMascotEvent] = useState<MascotEvent | null>(null);
@@ -169,88 +204,137 @@ export const HomePage = () => {
     useState<MascotState>("neutro");
   const bubbleProgress = useSharedValue(0);
 
+  const loadHomeData = useCallback(
+    async (shouldUpdate: () => boolean = () => true) => {
+      let progress: Awaited<ReturnType<typeof getDailyProgress>> | null = null;
+
+      try {
+        progress = await getDailyProgress();
+
+        const nextMascotContext: MascotContext = {
+          completedSuggestionsToday: progress.completedSuggestionsToday,
+          dailySuggestionTarget: progress.dailySuggestionTarget || 5,
+          history: buildMascotHistoryFromWeeklyHistory(progress.weeklyHistory),
+          isOffline: false,
+        };
+
+        if (!shouldUpdate()) {
+          return;
+        }
+
+        setMascotContext(nextMascotContext);
+        setMascotEvent(null);
+      } catch (error) {
+        console.error("Erro ao carregar progresso do mascote:", error);
+
+        if (!shouldUpdate()) {
+          return;
+        }
+
+        setMascotContext(null);
+        setMascotEvent(null);
+      }
+
+      try {
+        const token = await getAnonymousIdToken();
+        const suggestionsResult = await fetchSuggestions(token);
+
+        const completedSuggestionsToday =
+          progress?.completedSuggestionsToday ?? 0;
+        const allSuggestionsCompleted =
+          progress !== null &&
+          suggestionsResult.suggestions.length > 0 &&
+          completedSuggestionsToday >= suggestionsResult.suggestions.length;
+
+        const shouldShowCelebration =
+          allSuggestionsCompleted && (await shouldShowCelebrationToday());
+
+        const nextSpeechSuggestion = allSuggestionsCompleted
+          ? shouldShowCelebration
+            ? CELEBRATION_SUGGESTION
+            : null
+          : await pickSuggestion(
+              suggestionsResult.suggestions,
+              suggestionsResult.source === "offline"
+                ? "offline"
+                : suggestionsResult.source
+            );
+
+        if (!shouldUpdate()) {
+          return;
+        }
+
+        setSpeechSuggestion(nextSpeechSuggestion);
+        setIsBubbleVisible(nextSpeechSuggestion !== null);
+      } catch (error) {
+        console.warn("Nao foi possivel carregar sugestao do mascote.", error);
+
+        if (!shouldUpdate()) {
+          return;
+        }
+
+        setSpeechSuggestion(null);
+        setIsBubbleVisible(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    /**
+     * Observer da Home:
+     * observa eventos reais publicados no appEventBus e repassa
+     * a reacao correspondente para o componente Mascote.
+     */
+    const unsubscribe = appEventBus.subscribe((event) => {
+      const mascotEvent = mapAppEventToMascotEvent(event);
+
+      if (!mascotEvent) {
+        return;
+      }
+
+      setMascotEvent(mascotEvent);
+
+      if (
+        event.type === "suggestionCompleted" ||
+        event.type === "streakBroken" ||
+        event.type === "streakRecovered"
+      ) {
+        void loadHomeData();
+      }
+    });
+
+    return unsubscribe;
+  }, [loadHomeData]);
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      async function loadHomeData() {
-        let progress: Awaited<ReturnType<typeof getDailyProgress>> | null = null;
-      
-        try {
-          progress = await getDailyProgress();
-      
-          const nextMascotContext: MascotContext = {
-            completedSuggestionsToday: progress.completedSuggestionsToday,
-            dailySuggestionTarget: progress.dailySuggestionTarget || 5,
-            history: buildMascotHistoryFromWeeklyHistory(progress.weeklyHistory),
-            isOffline: false,
-          };
-      
-          if (!isActive) {
-            return;
-          }
-      
-          setMascotContext(nextMascotContext);
-          setMascotEvent(null);
-        } catch (error) {
-          console.error("Erro ao carregar progresso do mascote:", error);
-      
-          if (!isActive) {
-            return;
-          }
-      
-          setMascotContext(null);
-          setMascotEvent(null);
+      async function loadFocusedHomeData() {
+        await loadHomeData(() => isActive);
+
+        if (!isActive) {
+          return;
         }
-      
-        try {
-          const token = await getAnonymousIdToken();
-          const suggestionsResult = await fetchSuggestions(token);
-      
-          const completedSuggestionsToday = progress?.completedSuggestionsToday ?? 0;
-          const allSuggestionsCompleted =
-            progress !== null &&
-            suggestionsResult.suggestions.length > 0 &&
-            completedSuggestionsToday >= suggestionsResult.suggestions.length;
-      
-          const shouldShowCelebration =
-            allSuggestionsCompleted && (await shouldShowCelebrationToday());
-      
-          const nextSpeechSuggestion = allSuggestionsCompleted
-            ? shouldShowCelebration
-              ? CELEBRATION_SUGGESTION
-              : null
-            : await pickSuggestion(
-                suggestionsResult.suggestions,
-                suggestionsResult.source === "offline"
-                  ? "offline"
-                  : suggestionsResult.source
-              );
-      
-          if (!isActive) {
-            return;
-          }
-      
-          setSpeechSuggestion(nextSpeechSuggestion);
-          setIsBubbleVisible(nextSpeechSuggestion !== null);
-        } catch (error) {
-          console.warn("Nao foi possivel carregar sugestao do mascote.", error);
-      
-          if (!isActive) {
-            return;
-          }
-      
-          setSpeechSuggestion(null);
-          setIsBubbleVisible(false);
+
+        const lastEvent = appEventBus.getLastEvent();
+        const lastMascotEvent = lastEvent
+          ? mapAppEventToMascotEvent(lastEvent)
+          : null;
+
+        if (lastMascotEvent) {
+          setMascotEvent(lastMascotEvent);
+          appEventBus.clearLastEvent();
         }
       }
 
-      loadHomeData();
+      void loadFocusedHomeData();
 
       return () => {
         isActive = false;
       };
-    }, [])
+    }, [loadHomeData])
   );
 
   const speechMessage = useMemo(() => {
@@ -283,6 +367,17 @@ export const HomePage = () => {
   );
 
   function dismissBubble() {
+    if (speechSuggestion && speechSuggestion.source !== "celebration") {
+      appEventBus.publish({
+        type: "suggestionIgnored",
+        payload: {
+          suggestionId: speechSuggestion.id,
+          reason: "speechBubbleDismissed",
+          createdAt: Date.now(),
+        },
+      });
+    }
+
     setIsBubbleVisible(false);
   }
 
