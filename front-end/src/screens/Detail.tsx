@@ -10,6 +10,7 @@ import { GoalCheckCard } from "../shared/components/GoalCheckCard";
 import { QuestHeader } from "../shared/components/QuestHeader";
 import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { WeeklyRate } from "../shared/components/WeeklyRate";
+import { MascotReactionCard } from "../shared/components/MascotReactionCard";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import {
@@ -22,6 +23,8 @@ import {
   fetchSuggestions,
   Suggestion,
 } from "../services/suggestionsApi";
+import { resolveMascotReaction } from "../features/mascot/mascotReactionMapper";
+import type { MascotReaction } from "../features/mascot/mascotReactionTypes";
 
 const GOAL_CARD_SIZE = 80;
 
@@ -29,6 +32,10 @@ export const DetailPage = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [source, setSource] = useState<"engine" | "cache" | "offline" | null>(null);
   const [loading, setLoading] = useState(true);
+  const [completedSuggestionIds, setCompletedSuggestionIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [activeReaction, setActiveReaction] = useState<MascotReaction | null>(null);
   const [weeklyHistory, setWeeklyHistory] = useState<WeeklyHistoryDay[]>([]);
   const [progress, setProgress] = useState<ProgressIndicators | null>(null);
 
@@ -115,16 +122,34 @@ export const DetailPage = () => {
               const wasNewCompletion = await completeSuggestion(suggestion.id);
 
               if (wasNewCompletion) {
+                setCompletedSuggestionIds((current) => {
+                  const next = new Set(current);
+                  next.add(suggestion.id);
+
+                  const reaction = resolveMascotReaction({
+                    completedSuggestionsToday: next.size,
+                    previousCompletedSuggestionsToday: current.size,
+                    dailySuggestionTarget: progress?.dailySuggestionTarget ?? suggestions.length,
+                  });
+
+                  if (reaction) setActiveReaction(reaction);
+
+                  return next;
+                });
+
                 const dailyProgress = await getDailyProgress();
                 setProgress(dailyProgress);
                 setWeeklyHistory(dailyProgress.weeklyHistory);
               }
-
-              console.log("Sugestão concluída:", suggestion.id);
             }}
           />
         ))}
       </ScrollView>
+
+      <MascotReactionCard
+        reaction={activeReaction}
+        onDismiss={() => setActiveReaction(null)}
+      />
     </View>
   );
 };
@@ -136,7 +161,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingVertical: 12,
-    paddingBottom: 24,  
+    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,
