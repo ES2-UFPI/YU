@@ -10,6 +10,7 @@ import { GoalCheckCard } from "../shared/components/GoalCheckCard";
 import { QuestHeader } from "../shared/components/QuestHeader";
 import { DailyProgressBar } from "../shared/components/DailyProgressBar";
 import { WeeklyRate } from "../shared/components/WeeklyRate";
+import { MascotReactionCard } from "../shared/components/MascotReactionCard";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import {
@@ -17,9 +18,10 @@ import {
   fetchSuggestions,
   Suggestion,
 } from "../services/suggestionsApi";
+import { resolveMascotReaction } from "../features/mascot/mascotReactionMapper";
+import type { MascotReaction } from "../features/mascot/mascotReactionTypes";
 
 const GOAL_CARD_SIZE = 80;
-// TODO: substituir estes dados mockados pelo weeklyHistory retornado por /users/progress apos a hotfix do backend.
 const mockWeeklyRateDays = [
   { day: 1 as const, hasSuggestionDone: true },
   { day: 2 as const, hasSuggestionDone: false },
@@ -37,6 +39,7 @@ export const DetailPage = () => {
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<Set<string>>(
     () => new Set()
   );
+  const [activeReaction, setActiveReaction] = useState<MascotReaction | null>(null);
 
   useEffect(() => {
     async function loadSuggestions() {
@@ -85,7 +88,6 @@ export const DetailPage = () => {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Header com progresso atualizado em tempo real */}
       <QuestHeader
         title="Bem-vindo!"
         subtitle={
@@ -102,7 +104,6 @@ export const DetailPage = () => {
         }
       />
 
-      {/* ScrollView */}
       <ScrollView
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -124,15 +125,26 @@ export const DetailPage = () => {
                   const next = new Set(current);
                   next.add(suggestion.id);
 
+                  const reaction = resolveMascotReaction({
+                    completedSuggestionsToday: next.size,
+                    previousCompletedSuggestionsToday: current.size,
+                    dailySuggestionTarget: suggestions.length,
+                  });
+
+                  if (reaction) setActiveReaction(reaction);
+
                   return next;
                 });
               }
-
-              console.log("Sugestão concluída:", suggestion.id);
             }}
           />
         ))}
       </ScrollView>
+
+      <MascotReactionCard
+        reaction={activeReaction}
+        onDismiss={() => setActiveReaction(null)}
+      />
     </View>
   );
 };
@@ -144,7 +156,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingVertical: 12,
-    paddingBottom: 24,  
+    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,
