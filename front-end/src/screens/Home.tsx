@@ -12,7 +12,7 @@ import Animated, {
 
 import { OfensiveHeader } from "../shared/components/OfensiveHeader";
 import { MascotSpeechBubble } from "../shared/components/MascotSpeechBubble";
-import { Mascote, resolveMascotState } from "../features/mascot";
+import { Mascote } from "../features/mascot";
 import type {
   MascotContext,
   MascotEvent,
@@ -165,12 +165,9 @@ export const HomePage = () => {
   const [speechSuggestion, setSpeechSuggestion] =
     useState<SpeechSuggestion | null>(null);
   const [isBubbleVisible, setIsBubbleVisible] = useState(true);
+  const [resolvedMascotState, setResolvedMascotState] =
+    useState<MascotState>("neutro");
   const bubbleProgress = useSharedValue(0);
-
-  const mascotState: MascotState = useMemo(
-    () => (mascotContext ? resolveMascotState(mascotContext) : "neutro"),
-    [mascotContext]
-  );
 
   useFocusEffect(
     useCallback(() => {
@@ -261,8 +258,8 @@ export const HomePage = () => {
       return "";
     }
 
-    return buildMascotSpeech(speechSuggestion, mascotState);
-  }, [mascotState, speechSuggestion]);
+    return buildMascotSpeech(speechSuggestion, resolvedMascotState);
+  }, [resolvedMascotState, speechSuggestion]);
 
   const shouldRenderBubble = isBubbleVisible && speechSuggestion;
 
@@ -302,14 +299,19 @@ export const HomePage = () => {
             {speechSuggestion && (
               <MascotSpeechBubble
                 isOffline={speechSuggestion.source === "offline"}
-                mascotState={mascotState}
+                mascotState={resolvedMascotState}
                 message={speechMessage}
                 onDismiss={dismissBubble}
               />
             )}
           </Animated.View>
 
-          <Mascote context={mascotContext} event={mascotEvent} size={360} />
+          <Mascote
+            context={mascotContext}
+            event={mascotEvent}
+            size={360}
+            onStateChange={setResolvedMascotState}
+          />
         </View>
       </ScrollView>
     </View>
