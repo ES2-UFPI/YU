@@ -7,7 +7,8 @@ import Animated, {
   Easing,
   runOnJS,
 } from "react-native-reanimated";
-import type { MascotReaction } from "../../features/mascot/MascotReactionTypes";
+import type { MascotReaction } from "../../features/mascot/mascotReactionTypes";
+
 
 const REACTION_CONFIG: Record<MascotReaction, { text: string; image: ReturnType<typeof require> }> = {
   primeiro_goal: {
