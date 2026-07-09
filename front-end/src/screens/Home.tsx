@@ -282,9 +282,9 @@ export const HomePage = () => {
 
   useEffect(() => {
     /**
-     * Observer da Home:
-     * observa eventos reais publicados no appEventBus e repassa
-     * a reacao correspondente para o componente Mascote.
+     * Observer:
+     * a Home se inscreve no appEventBus para reagir a eventos
+     * publicados por outros modulos, como a tela de missoes.
      */
     const unsubscribe = appEventBus.subscribe((event) => {
       const mascotEvent = mapAppEventToMascotEvent(event);
