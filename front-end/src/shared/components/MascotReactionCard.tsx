@@ -11,7 +11,7 @@ import type { MascotReaction } from "../../features/mascot/MascotReactionTypes";
 
 const REACTION_CONFIG: Record<MascotReaction, { text: string; image: ReturnType<typeof require> }> = {
   primeiro_goal: {
-    text: "Primeiro goal do dia!\nContinue assim",
+    text: "Primeiro objetivo do dia!\nContinue assim",
     image: require("../../../assets/mascot/icons/icon_yu_happy.png"),
   },
   ultimo_goal: {

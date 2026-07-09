@@ -37,8 +37,8 @@ export function resolveMascotReaction(
 }
 
 export const REACTION_CARD_TEXT: Record<MascotReaction, string> = {
-  primeiro_goal: "Primeiro goal do dia! Continue assim 💪",
-  ultimo_goal: "Meta do dia concluída! Yu está orgulhoso 🎉",
+  primeiro_goal: "Primeiro goal do dia! Continue assim ",
+  ultimo_goal: "Meta do dia concluída! Yu está orgulhoso ",
 };
 
 function normalizeCompleted(value: number, max: number): number {
