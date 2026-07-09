@@ -76,7 +76,9 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
   }, [currentState, opacity, scale, translateY]);
 
   useEffect(() => {
-    if (!event) {
+    const eventType = event?.type;
+
+    if (!eventType) {
       return;
     }
 
@@ -88,7 +90,7 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
     translateY.value = 0;
     scale.value = 1;
 
-    if (event === "metaCumprida") {
+    if (eventType === "metaCumprida") {
       scale.value = withSequence(
         withTiming(1.12, {
           duration: 140,
@@ -102,7 +104,7 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
       return;
     }
 
-    if (event === "sugestaoIgnorada") {
+    if (eventType === "sugestaoIgnorada") {
       translateX.value = withSequence(
         withTiming(-8, { duration: 55 }),
         withTiming(8, { duration: 55 }),
@@ -113,7 +115,7 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
       return;
     }
 
-    if (event === "streakQuebrada") {
+    if (eventType === "streakQuebrada") {
       scale.value = withSequence(
         withTiming(0.92, {
           duration: 130,
@@ -157,7 +159,7 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
         stiffness: 180,
       })
     );
-  }, [event, scale, translateX, translateY]);
+  }, [event?.createdAt, event?.id, event?.type, scale, translateX, translateY]);
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
