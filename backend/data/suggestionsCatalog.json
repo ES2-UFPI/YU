@@ -322,20 +322,6 @@
     "offlineAvailable": true
   },
   {
-    "id": "whatsapp-check-window",
-    "title": "Agrupe respostas no WhatsApp",
-    "shortDescription": "Responda mensagens em um bloco e depois feche o app.",
-    "category": "digital_balance",
-    "wellbeingCategory": "digital_rest",
-    "contextRequirements": {
-      "goals": ["screen_time_balance", "study"],
-      "weather": ["any"],
-      "location": ["any"],
-      "screenTimeLevel": ["medium", "high"]
-    },
-    "offlineAvailable": true
-  },
-  {
     "id": "phone-away-meal",
     "title": "Coma longe do celular",
     "shortDescription": "Deixe o aparelho de lado durante a próxima refeição.",

@@ -22,9 +22,15 @@ type MascoteProps = {
   context: MascotContext | null;
   event?: MascotEvent | null;
   size?: number;
+  onStateChange?: (state: MascotState) => void;
 };
 
-export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
+export function Mascote({
+  context,
+  event = null,
+  size = 340,
+  onStateChange,
+}: MascoteProps) {
   const [currentState, setCurrentState] = useState<MascotState>("neutro");
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
@@ -42,6 +48,7 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
 
       if (isActive) {
         setCurrentState(nextState);
+        onStateChange?.(nextState);
       }
     }
 
@@ -50,7 +57,7 @@ export function Mascote({ context, event = null, size = 340 }: MascoteProps) {
     return () => {
       isActive = false;
     };
-  }, [context]);
+  }, [context, onStateChange]);
 
   useEffect(() => {
     cancelAnimation(opacity);
